@@ -12,6 +12,7 @@ export interface RenderedPage {
   width: number;
   height: number;
   aspectRatio: number;
+  textContent?: string;
 }
 
 export interface PdfDocumentInfo {
@@ -35,7 +36,7 @@ export async function loadPdfDocument(data: ArrayBuffer | Uint8Array) {
 }
 
 /**
- * Render a single page to a crisp dataURL with high-DPI scaling
+ * Render a single page to a crisp dataURL with high-DPI scaling and extract text content
  */
 export async function renderPdfPage(
   pdfDoc: pdfjsLib.PDFDocumentProxy,
@@ -46,6 +47,22 @@ export async function renderPdfPage(
   const unscaledViewport = page.getViewport({ scale: 1.0 });
   const scale = Math.min(2.5, Math.max(1.2, targetWidth / unscaledViewport.width));
   const viewport = page.getViewport({ scale });
+
+  // Extract text content for speech reading & accessibility
+  let textContent = '';
+  try {
+    const textObj = await page.getTextContent();
+    if (textObj && Array.isArray(textObj.items)) {
+      textContent = textObj.items
+        .map((item: any) => (typeof item?.str === 'string' ? item.str : ''))
+        .filter((str: string) => str.trim().length > 0)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+  } catch (err) {
+    console.warn(`Không thể trích xuất văn bản trang ${pageNumber}:`, err);
+  }
 
   const canvas = document.createElement('canvas');
   canvas.width = Math.floor(viewport.width);
@@ -74,5 +91,6 @@ export async function renderPdfPage(
     width: canvas.width,
     height: canvas.height,
     aspectRatio: unscaledViewport.width / unscaledViewport.height,
+    textContent: textContent || undefined,
   };
 }

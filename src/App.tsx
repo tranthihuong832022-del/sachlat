@@ -43,6 +43,8 @@ import { ReadingToolbar } from './components/ReadingToolbar';
 import { ThemeModal } from './components/ThemeModal';
 import { PageThumbnailsDrawer } from './components/PageThumbnailsDrawer';
 import { ShareLinkModal } from './components/ShareLinkModal';
+import { SpeechPlayerBar } from './components/SpeechPlayerBar';
+import { speechEngine, SpeechState } from './utils/speechReader';
 
 export default function App() {
   // Theme state
@@ -58,6 +60,13 @@ export default function App() {
   const [sampleBookId, setSampleBookId] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  // Speech Narration (TTS) state
+  const [speechState, setSpeechState] = useState<SpeechState>(() => speechEngine.getState());
+  const [autoReadOnFlip, setAutoReadOnFlip] = useState<boolean>(
+    () => speechEngine.getSettings().autoReadOnFlip
+  );
+  const [isSpeechPlayerOpen, setIsSpeechPlayerOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingProgress, setLoadingProgress] = useState<{
     step: string;
@@ -136,6 +145,76 @@ export default function App() {
   const handleThemeChange = (newTheme: ThemeConfig) => {
     setTheme(newTheme);
     saveTheme(newTheme);
+  };
+
+  // Subscribe to speech engine updates
+  useEffect(() => {
+    const unsub = speechEngine.subscribeState((state) => {
+      setSpeechState(state);
+    });
+    return () => unsub();
+  }, []);
+
+  // When page flips: auto read if autoReadOnFlip is enabled or if speech is actively speaking
+  useEffect(() => {
+    if (pages.length === 0 || !pages[currentPageIndex]) return;
+    const curPage = pages[currentPageIndex];
+
+    if (autoReadOnFlip) {
+      setIsSpeechPlayerOpen(true);
+      speechEngine.speak(curPage.textContent || '', {
+        pageNumber: curPage.pageNumber,
+        bookTitle,
+      });
+    } else if (speechState === 'speaking') {
+      speechEngine.speak(curPage.textContent || '', {
+        pageNumber: curPage.pageNumber,
+        bookTitle,
+      });
+    }
+  }, [currentPageIndex]);
+
+  // Voice Speech handlers
+  const handleToggleAutoReadOnFlip = (enabled: boolean) => {
+    setAutoReadOnFlip(enabled);
+    speechEngine.setAutoReadOnFlip(enabled);
+    showToast(
+      enabled
+        ? 'Đã bật: Tự động phát âm thanh đọc khi lật sang trang mới!'
+        : 'Đã tắt tự động đọc khi lật trang',
+      'info'
+    );
+    if (enabled) {
+      setIsSpeechPlayerOpen(true);
+      if (speechState === 'idle') {
+        const curPage = pages[currentPageIndex];
+        speechEngine.speak(curPage?.textContent || '', {
+          pageNumber: curPage?.pageNumber || currentPageIndex + 1,
+          bookTitle,
+        });
+      }
+    }
+  };
+
+  const handleToggleSpeechPlayer = () => {
+    if (!isSpeechPlayerOpen) {
+      setIsSpeechPlayerOpen(true);
+      if (speechState === 'idle') {
+        const curPage = pages[currentPageIndex];
+        speechEngine.speak(curPage?.textContent || '', {
+          pageNumber: curPage?.pageNumber || currentPageIndex + 1,
+          bookTitle,
+        });
+      }
+    } else {
+      if (speechState === 'speaking') {
+        speechEngine.pause();
+      } else if (speechState === 'paused') {
+        speechEngine.resume();
+      } else {
+        setIsSpeechPlayerOpen(false);
+      }
+    }
   };
 
   // Audio controls
@@ -285,6 +364,7 @@ export default function App() {
   // Process uploaded PDF file
   const handleFileSelect = async (file: File, existingBookId?: string) => {
     setErrorMessage(null);
+    speechEngine.stop();
 
     // 1. Validate file format and size
     const validation = validatePdfFile(file);
@@ -394,6 +474,7 @@ export default function App() {
 
   // Open built-in sample book
   const handleSelectSampleBook = (bookId: string) => {
+    speechEngine.stop();
     setIsLoading(true);
     setLoadingProgress({ step: 'Đang chuẩn bị sách mẫu...', percent: 50 });
 
@@ -455,6 +536,8 @@ export default function App() {
   };
 
   const handleReturnToUpload = () => {
+    speechEngine.stop();
+    setIsSpeechPlayerOpen(false);
     pdfDocRef.current = null;
     totalDocPagesRef.current = 0;
     setUploadedFile(null);
@@ -695,6 +778,11 @@ export default function App() {
               onToggleAutoFlip={() => setIsAutoFlipping((prev) => !prev)}
               isBookmarked={isBookmarked}
               onToggleBookmark={() => setIsBookmarked((prev) => !prev)}
+              isSpeechSpeaking={speechState === 'speaking'}
+              isSpeechPlayerOpen={isSpeechPlayerOpen}
+              onToggleSpeechPlayer={handleToggleSpeechPlayer}
+              autoReadOnFlip={autoReadOnFlip}
+              onToggleAutoReadOnFlip={handleToggleAutoReadOnFlip}
               theme={theme}
               bookTitle={bookTitle}
             />
@@ -710,6 +798,20 @@ export default function App() {
                 bookRef={bookFlipRef}
               />
             </div>
+
+            {/* Floating Speech Narration Player Bar (Active or expanded) */}
+            {isReading && (isSpeechPlayerOpen || speechState !== 'idle') && (
+              <SpeechPlayerBar
+                theme={theme}
+                currentPageNumber={currentPageIndex + 1}
+                totalPages={pages.length}
+                currentPageText={pages[currentPageIndex]?.textContent || ''}
+                bookTitle={bookTitle}
+                autoReadOnFlip={autoReadOnFlip}
+                onToggleAutoReadOnFlip={handleToggleAutoReadOnFlip}
+                onClose={() => setIsSpeechPlayerOpen(false)}
+              />
+            )}
 
             {/* Bottom Keyboard & Touch Instructions (Subtle Footer Bar) */}
             <div
@@ -776,6 +878,7 @@ export default function App() {
         currentPageIndex={currentPageIndex}
         onDownloadZip={handleDownloadZipFlipbook}
         onDownloadPdf={handleDownloadPdf}
+        onDownloadStandaloneHtml={handleDownloadHtmlFlipbook}
         isExportingZip={isExportingZip}
       />
 

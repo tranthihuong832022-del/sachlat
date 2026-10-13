@@ -40,18 +40,46 @@ export const SAMPLE_BOOKS: SampleBookMeta[] = [
   },
 ];
 
+export const SAMPLE_BOOK_TEXTS: Record<string, string[]> = {
+  sample_nature: [
+    'Hành Trình Tri Thức Xanh. Khám phá thế giới diệu kỳ và bảo tồn thiên nhiên. Bộ sách tri thức và cuộc sống, Tập một. Dành cho giáo viên và học sinh. Nhà xuất bản Giáo Dục Việt Nam.',
+    'Lời Nói Đầu và Mục Lục. Trái Đất là ngôi nhà chung của muôn loài, mang trong mình vẻ đẹp kỳ vĩ và sự sống nhiệm màu. Cuốn sách giúp bạn khám phá các hệ sinh thái từ rừng nhiệt đới bạt ngàn đến đại dương sâu thẳm. Mục lục: Chương 1: Rừng Xanh Lá Phổi Của Trái Đất. Chương 2: Đại Dương Và Nguồn Sống Bất Tận. Chương 3: Hành Động Xanh Vì Tương Lai.',
+    'Chương 1: Rừng Xanh - Lá Phổi Của Trái Đất. Rừng nhiệt đới lưu trữ hơn 250 tỷ tấn carbon, hấp thụ khí CO2 và cung cấp khí oxy trong lành cho toàn nhân loại. Mỗi hecta rừng là một kho tàng sinh thái vô giá với hàng ngàn loài thực vật và động vật quý hiếm cùng sinh sống chan hòa.',
+    'Khám Phá Các Tầng Tán Của Rừng Nhiệt Đới. Tầng vượt tán là nơi những cây cổ thụ cao vút trên 40 mét đón ánh nắng mặt trời rực rỡ. Tầng tán chính tạo thành mái vòm xanh che phủ. Tầng dưới tán và tầng thảm tươi là nơi sinh sôi của các loài hoa lan, dương xỉ và côn trùng phong phú.',
+    'Chương 2: Đại Dương Và Nguồn Sống Bất Tận. Đại dương bao phủ hơn 70% bề mặt Trái Đất, sản sinh hơn một nửa lượng oxy trong khí quyển và điều hòa khí hậu toàn cầu. Rạn san hô Nha Trang là ngôi nhà chung của hơn 40% sinh vật biển, nhưng đang đối mặt với nguy cơ biến đổi khí hậu.',
+    'Các Sinh Vật Độc Đáo Dưới Đáy Biển Sâu. Từ loài cá voi xanh khổng lồ đến các loài sinh vật phù du siêu nhỏ, mỗi mắt xích sinh thái đều đóng vai trò then chốt trong chuỗi thức ăn biển cả. Bảo vệ đại dương khỏi rác thải nhựa là trách nhiệm cấp bách của mỗi công dân toàn cầu.',
+    'Chương 3: Hành Động Xanh Vì Một Ngày Mai Tươi Đẹp. Mỗi hành động nhỏ hôm nay đều góp phần gieo mầm cho tương lai: Tiết kiệm điện nước, trồng thêm cây xanh quanh trường lớp, sử dụng vật liệu tái chế và lan tỏa lối sống xanh đến bạn bè và gia đình.',
+    'Lời Kết: Trái Đất Trong Tay Chúng Ta. Cảm ơn bạn đã đồng hành cùng cuốn sách. Hãy cùng nhau bảo vệ hành tinh xanh của chúng ta ngày càng tươi đẹp và tràn đầy sức sống. Chúc bạn có những trải nghiệm đọc sách tuyệt vời!'
+  ],
+  sample_pedagogy: [
+    'Sổ Tay Sư Phạm: Đọc Sách Tích Cực. Cẩm nang phương pháp phát triển văn hóa đọc học đường. Viện Nghiên Cứu Giáo Dục Đổi Mới.',
+    'Mục Tiêu Và Tầm Nhìn Giáo Dục. Đọc sách không chỉ là tiếp thu kiến thức mà là hành trình rèn luyện tư duy phản biện, nuôi dưỡng tâm hồn và đánh thức lòng trắc ẩn trong mỗi đứa trẻ.',
+    'Phương Pháp 1: Giờ Đọc Yên Lặng Hàng Ngày. Dành 15 phút đầu mỗi ngày để học sinh tự do chọn cuốn sách yêu thích và chìm đắm trong thế giới ngôn từ không bị ngắt quãng.',
+    'Phương Pháp 2: Câu Lạc Bộ Sách Và Thảo Luận Nhóm. Tạo không gian an toàn để học sinh bày tỏ quan điểm, đặt câu hỏi cho tác giả và chia sẻ bài học rút ra từ tác phẩm.',
+    'Đánh Giá Và Ghi Nhận Sự Tiến Bộ. Khuyến khích bằng nhật ký đọc sách, sơ đồ tư duy và huy hiệu người đọc tích cực thay vì chỉ chấm điểm hình thức.',
+    'Thông Điệp Cuối: Mỗi Trang Sách Là Một Cánh Cửa Mở Ra Tương Lai. Chúc các thầy cô và các bậc phụ huynh luôn tìm thấy niềm vui trên hành trình truyền cảm hứng đọc sách.'
+  ]
+};
+
 /**
  * Generates rendered page images for a sample book dynamically using HTML5 Canvas
  */
 export function generateSampleBookPages(bookId: string): RenderedPage[] {
   const width = 800;
   const height = 1130; // standard A4 aspect ratio (1 : 1.414)
-  const pages: RenderedPage[] = [];
+  let pages: RenderedPage[] = [];
 
   if (bookId === 'sample_pedagogy') {
-    return generatePedagogyPages(width, height);
+    pages = generatePedagogyPages(width, height);
+  } else {
+    pages = generateNaturePages(width, height);
   }
-  return generateNaturePages(width, height);
+
+  const textList = SAMPLE_BOOK_TEXTS[bookId] || SAMPLE_BOOK_TEXTS.sample_nature || [];
+  return pages.map((page, index) => ({
+    ...page,
+    textContent: textList[index] || `Trang ${page.pageNumber}`,
+  }));
 }
 
 function createBaseCanvas(width: number, height: number): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {

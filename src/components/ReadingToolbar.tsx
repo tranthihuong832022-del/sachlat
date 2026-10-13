@@ -23,6 +23,7 @@ import {
   Loader2,
   Share2,
   Globe,
+  Headphones,
 } from 'lucide-react';
 import { ThemeConfig } from '../utils/theme';
 
@@ -54,6 +55,11 @@ interface ReadingToolbarProps {
   onToggleAutoFlip?: () => void;
   isBookmarked?: boolean;
   onToggleBookmark?: () => void;
+  isSpeechSpeaking?: boolean;
+  isSpeechPlayerOpen?: boolean;
+  onToggleSpeechPlayer?: () => void;
+  autoReadOnFlip?: boolean;
+  onToggleAutoReadOnFlip?: (enabled: boolean) => void;
   theme: ThemeConfig;
   bookTitle?: string;
 }
@@ -86,6 +92,11 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
   onToggleAutoFlip,
   isBookmarked = false,
   onToggleBookmark,
+  isSpeechSpeaking = false,
+  isSpeechPlayerOpen = false,
+  onToggleSpeechPlayer,
+  autoReadOnFlip = false,
+  onToggleAutoReadOnFlip,
   theme,
   bookTitle,
 }) => {
@@ -356,44 +367,123 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
             {/* Volume popover */}
             {showVolumePopover && (
               <div
-                className="absolute right-0 top-full mt-2 p-3 rounded-xl border shadow-xl z-50 w-52 flex flex-col gap-2.5 animate-in fade-in zoom-in-95"
+                className="absolute right-0 top-full mt-2 p-3 rounded-xl border shadow-xl z-50 w-60 flex flex-col gap-3 animate-in fade-in zoom-in-95"
                 style={{
                   backgroundColor: theme.surface,
                   borderColor: theme.surfaceBorder,
                   color: theme.text,
                 }}
               >
-                <div className="flex items-center justify-between text-xs font-semibold">
-                  <span>Âm thanh lật trang</span>
-                  <button
-                    onClick={onToggleMute}
-                    className="text-[11px] underline opacity-80 hover:opacity-100 cursor-pointer"
-                  >
-                    {isMuted ? 'Bật âm' : 'Tắt âm'}
-                  </button>
+                {/* 1. Page flip sound effect */}
+                <div>
+                  <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
+                    <span>Âm thanh lật trang giấy</span>
+                    <button
+                      onClick={onToggleMute}
+                      className="text-[11px] underline opacity-80 hover:opacity-100 cursor-pointer"
+                    >
+                      {isMuted ? 'Bật âm' : 'Tắt âm'}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button onClick={onToggleMute} className="opacity-70 hover:opacity-100 cursor-pointer">
+                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    </button>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={isMuted ? 0 : volume}
+                      onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+                      className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-black/10 accent-current"
+                      style={{ accentColor: theme.primary }}
+                    />
+                    <span className="text-[11px] font-mono w-7 text-right">
+                      {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button onClick={onToggleMute} className="opacity-70 hover:opacity-100 cursor-pointer">
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </button>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={isMuted ? 0 : volume}
-                    onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-                    className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-black/10 accent-current"
-                    style={{ accentColor: theme.primary }}
-                  />
-                  <span className="text-[11px] font-mono w-7 text-right">
-                    {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
-                  </span>
-                </div>
+                {/* 2. Voice reading / Speech section */}
+                {onToggleSpeechPlayer && (
+                  <div className="pt-2 border-t flex flex-col gap-2" style={{ borderColor: theme.surfaceBorder }}>
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                        <Headphones className="w-3.5 h-3.5" />
+                        Giọng đọc nội dung
+                      </span>
+                      {isSpeechSpeaking && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500 text-white font-bold animate-pulse">
+                          Đang đọc
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Auto Read on Flip toggle */}
+                    {onToggleAutoReadOnFlip && (
+                      <label className="flex items-center justify-between text-[11px] cursor-pointer hover:opacity-100 opacity-90">
+                        <span>Tự động đọc khi lật trang</span>
+                        <input
+                          type="checkbox"
+                          checked={autoReadOnFlip}
+                          onChange={(e) => onToggleAutoReadOnFlip(e.target.checked)}
+                          className="w-3.5 h-3.5 accent-emerald-600 cursor-pointer"
+                        />
+                      </label>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        onToggleSpeechPlayer();
+                        setShowVolumePopover(false);
+                      }}
+                      className="w-full py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Headphones className="w-3.5 h-3.5" />
+                      {isSpeechSpeaking ? 'Điều khiển giọng đọc' : 'Bật đọc trang này'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
+
+          {/* Voice Narration / Speech Reader Button on Toolbar */}
+          {onToggleSpeechPlayer && (
+            <button
+              onClick={onToggleSpeechPlayer}
+              className={`relative px-2.5 py-2 rounded-lg border flex items-center gap-1.5 text-xs font-medium transition-all cursor-pointer ${
+                isSpeechSpeaking
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm animate-pulse'
+                  : isSpeechPlayerOpen
+                  ? 'bg-black/10 border-black/20'
+                  : 'hover:bg-black/5'
+              }`}
+              style={{
+                borderColor: isSpeechSpeaking ? undefined : theme.surfaceBorder,
+                color: isSpeechSpeaking ? '#FFFFFF' : autoReadOnFlip ? theme.primary : theme.text,
+              }}
+              title={
+                isSpeechSpeaking
+                  ? 'Đang đọc giọng nói trang sách (Nhấp để mở bảng điều khiển)'
+                  : autoReadOnFlip
+                  ? 'Giọng đọc đang ở chế độ tự động đọc khi lật (Nhấp để mở)'
+                  : 'Đọc to nội dung trang sách (Giọng đọc AI / Text-to-Speech)'
+              }
+            >
+              <Headphones className="w-4 h-4" />
+              <span className="hidden lg:inline">
+                {isSpeechSpeaking ? 'Đang đọc...' : 'Đọc trang'}
+              </span>
+
+              {/* Status indicator badge */}
+              {autoReadOnFlip && !isSpeechSpeaking && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Tự động đọc khi lật đang bật" />
+              )}
+            </button>
+          )}
 
           {/* Theme Palette Button */}
           <button

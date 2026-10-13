@@ -137,8 +137,8 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
   // 4. Generate standalone index.html with EMBEDDED Data URLs:
   // Using Data URLs guarantees that opening index.html directly from Windows Explorer,
   // zip preview, or any file path will NEVER result in broken images or blank pages!
-  onProgress?.({ step: 'Đang tạo giao diện lật sách ngoại tuyến...', percent: 65 });
   const embeddedPagesJson = JSON.stringify(pages.map((p) => p.dataUrl));
+  const embeddedTextsJson = JSON.stringify(pages.map((p) => p.textContent || ''));
   const escapedTitle = safeTitle.replace(/[&<>"']/g, (m) => ({
     '&': '&amp;',
     '<': '&lt;',
@@ -359,8 +359,9 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
         <div class="color-dot" style="background: #F0F5ED;" title="Thư Viện" onclick="setTheme('#F0F5ED', '#166534')"></div>
         <div class="color-dot" style="background: #F5F3FF;" title="Thạch Anh" onclick="setTheme('#F5F3FF', '#5B21B6')"></div>
         <div class="color-dot" style="background: #0F172A;" title="Đêm Trăng (Tối)" onclick="setTheme('#0F172A', '#0284C7', true)"></div>
-      </div>
-      <button class="btn" id="btnSound">🔊 Âm thanh: Bật</button>
+      <button class="btn" id="btnSound">🔊 Âm lật: Bật</button>
+      <button class="btn" id="btnSpeech" title="Đọc giọng nói nội dung trang sách">🎧 Đọc trang</button>
+      <button class="btn" id="btnAutoSpeech" title="Tự động phát giọng đọc khi lật trang">⚡ Đọc khi lật: Tắt</button>
       <button class="btn" id="btnMode">📖 2 Trang</button>
       <button class="btn" id="btnZoomOut" title="Thu nhỏ">🔍-</button>
       <button class="btn" id="btnZoomReset" title="Đặt lại 100%">100%</button>
@@ -425,12 +426,44 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
   <script>
     // 100% self-contained embedded page image data (zero external dependencies)
     const pages = ${embeddedPagesJson};
+    const pagesText = ${embeddedTextsJson};
     const totalPages = pages.length;
     let currentIndex = 0;
     let viewMode = window.innerWidth < 768 ? 'single' : 'dual';
     let isSoundOn = true;
+    let isAutoSpeech = false;
+    let isSpeechSpeaking = false;
     let zoomLevel = 1.0;
     let isFlipping = false;
+
+    function speakCurrentPage() {
+      if (!('speechSynthesis' in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const text = pagesText[currentIndex] || ('Trang ' + (currentIndex + 1));
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang = 'vi-VN';
+        const voices = window.speechSynthesis.getVoices();
+        const viVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('vi'));
+        if (viVoice) utt.voice = viVoice;
+        utt.onstart = () => {
+          isSpeechSpeaking = true;
+          const btn = document.getElementById('btnSpeech');
+          if (btn) btn.innerText = '⏸ Đang đọc...';
+        };
+        utt.onend = () => {
+          isSpeechSpeaking = false;
+          const btn = document.getElementById('btnSpeech');
+          if (btn) btn.innerText = '🎧 Đọc trang';
+        };
+        utt.onerror = () => {
+          isSpeechSpeaking = false;
+          const btn = document.getElementById('btnSpeech');
+          if (btn) btn.innerText = '🎧 Đọc trang';
+        };
+        window.speechSynthesis.speak(utt);
+      } catch (e) {}
+    }
 
     // Web Audio synthesizer for paper turn (100% offline, zero audio files required)
     let audioCtx = null;
@@ -564,6 +597,10 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
         ? currentIndex >= totalPages - 1
         : (currentIndex > 0 ? (currentIndex % 2 === 1 ? currentIndex + 1 : currentIndex) >= totalPages - 1 : totalPages <= 1);
       btnNext.classList.toggle('disabled', isAtLast);
+
+      if (isAutoSpeech) {
+        speakCurrentPage();
+      }
     }
 
     function flipNext() {
@@ -689,8 +726,33 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
     // Sound toggle
     document.getElementById('btnSound').addEventListener('click', function() {
       isSoundOn = !isSoundOn;
-      this.innerText = isSoundOn ? '🔊 Âm thanh: Bật' : '🔇 Âm thanh: Tắt';
+      this.innerText = isSoundOn ? '🔊 Âm lật: Bật' : '🔇 Âm lật: Tắt';
     });
+
+    // Voice Speech readers
+    const btnSpeech = document.getElementById('btnSpeech');
+    if (btnSpeech) {
+      btnSpeech.addEventListener('click', function() {
+        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+          isSpeechSpeaking = false;
+          this.innerText = '🎧 Đọc trang';
+        } else {
+          speakCurrentPage();
+        }
+      });
+    }
+
+    const btnAutoSpeech = document.getElementById('btnAutoSpeech');
+    if (btnAutoSpeech) {
+      btnAutoSpeech.addEventListener('click', function() {
+        isAutoSpeech = !isAutoSpeech;
+        this.innerText = isAutoSpeech ? '⚡ Đọc khi lật: Bật' : '⚡ Đọc khi lật: Tắt';
+        if (isAutoSpeech) {
+          speakCurrentPage();
+        }
+      });
+    }
 
     // Dual / Single view mode toggle
     btnMode.innerText = viewMode === 'dual' ? '📖 2 Trang' : '📱 1 Trang';

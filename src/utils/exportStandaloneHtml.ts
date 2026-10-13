@@ -13,6 +13,7 @@ export function exportStandaloneHtmlFlipbook(
 ) {
   const cleanTitle = title.replace(/[<>&"]/g, '');
   const pagesJson = JSON.stringify(pages.map((p) => p.dataUrl));
+  const pagesTextJson = JSON.stringify(pages.map((p) => p.textContent || ''));
 
   const htmlContent = `<!DOCTYPE html>
 <html lang="vi">
@@ -250,7 +251,9 @@ export function exportStandaloneHtmlFlipbook(
       <span>${cleanTitle}</span>
     </div>
     <div class="nav-tools">
-      <button class="btn" id="btnSound">🔊 Âm thanh: Bật</button>
+      <button class="btn" id="btnSound">🔊 Âm lật: Bật</button>
+      <button class="btn" id="btnSpeech" title="Đọc nội dung trang">🎧 Đọc trang</button>
+      <button class="btn" id="btnAutoSpeech" title="Tự động đọc nội dung khi lật trang">⚡ Đọc khi lật: Tắt</button>
       <button class="btn" id="btnMode">📖 2 Trang</button>
       <button class="btn" id="btnZoomOut">🔍-</button>
       <button class="btn" id="btnZoomReset">100%</button>
@@ -304,12 +307,44 @@ export function exportStandaloneHtmlFlipbook(
 
   <script>
     const pages = ${pagesJson};
+    const pagesText = ${pagesTextJson};
     const totalPages = pages.length;
     let currentIndex = 0;
     let viewMode = window.innerWidth < 768 ? 'single' : 'dual';
     let isSoundOn = true;
+    let isAutoSpeech = false;
+    let isSpeechSpeaking = false;
     let zoomLevel = 1.0;
     let isFlipping = false;
+
+    function speakCurrentPage() {
+      if (!('speechSynthesis' in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const text = pagesText[currentIndex] || ('Trang ' + (currentIndex + 1));
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang = 'vi-VN';
+        const voices = window.speechSynthesis.getVoices();
+        const viVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('vi'));
+        if (viVoice) utt.voice = viVoice;
+        utt.onstart = () => {
+          isSpeechSpeaking = true;
+          const btn = document.getElementById('btnSpeech');
+          if (btn) btn.innerText = '⏸ Đang đọc...';
+        };
+        utt.onend = () => {
+          isSpeechSpeaking = false;
+          const btn = document.getElementById('btnSpeech');
+          if (btn) btn.innerText = '🎧 Đọc trang';
+        };
+        utt.onerror = () => {
+          isSpeechSpeaking = false;
+          const btn = document.getElementById('btnSpeech');
+          if (btn) btn.innerText = '🎧 Đọc trang';
+        };
+        window.speechSynthesis.speak(utt);
+      } catch (e) {}
+    }
 
     // Web Audio synthesizer for offline flip sound
     let audioCtx = null;
@@ -400,6 +435,10 @@ export function exportStandaloneHtmlFlipbook(
         ? currentIndex >= totalPages - 1
         : (currentIndex > 0 ? (currentIndex % 2 === 1 ? currentIndex + 1 : currentIndex) >= totalPages - 1 : totalPages <= 1);
       btnNext.classList.toggle('disabled', isAtLast);
+
+      if (isAutoSpeech) {
+        speakCurrentPage();
+      }
     }
 
     function flipNext() {
@@ -499,8 +538,32 @@ export function exportStandaloneHtmlFlipbook(
 
     document.getElementById('btnSound').addEventListener('click', function() {
       isSoundOn = !isSoundOn;
-      this.innerText = isSoundOn ? '🔊 Âm thanh: Bật' : '🔇 Âm thanh: Tắt';
+      this.innerText = isSoundOn ? '🔊 Âm lật: Bật' : '🔇 Âm lật: Tắt';
     });
+
+    const btnSpeech = document.getElementById('btnSpeech');
+    if (btnSpeech) {
+      btnSpeech.addEventListener('click', function() {
+        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+          isSpeechSpeaking = false;
+          this.innerText = '🎧 Đọc trang';
+        } else {
+          speakCurrentPage();
+        }
+      });
+    }
+
+    const btnAutoSpeech = document.getElementById('btnAutoSpeech');
+    if (btnAutoSpeech) {
+      btnAutoSpeech.addEventListener('click', function() {
+        isAutoSpeech = !isAutoSpeech;
+        this.innerText = isAutoSpeech ? '⚡ Đọc khi lật: Bật' : '⚡ Đọc khi lật: Tắt';
+        if (isAutoSpeech) {
+          speakCurrentPage();
+        }
+      });
+    }
 
     document.getElementById('btnMode').addEventListener('click', function() {
       viewMode = viewMode === 'dual' ? 'single' : 'dual';
