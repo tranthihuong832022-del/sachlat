@@ -134,9 +134,11 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
     pageImageRelativePaths.push(`pages/${fileName}`);
   }
 
-  // 4. Generate standalone index.html referencing local relative page paths
+  // 4. Generate standalone index.html with EMBEDDED Data URLs:
+  // Using Data URLs guarantees that opening index.html directly from Windows Explorer,
+  // zip preview, or any file path will NEVER result in broken images or blank pages!
   onProgress?.({ step: 'Đang tạo giao diện lật sách ngoại tuyến...', percent: 65 });
-  const relativePagesJson = JSON.stringify(pageImageRelativePaths);
+  const embeddedPagesJson = JSON.stringify(pages.map((p) => p.dataUrl));
   const escapedTitle = safeTitle.replace(/[&<>"']/g, (m) => ({
     '&': '&amp;',
     '<': '&lt;',
@@ -380,13 +382,13 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
         <div class="corner-brass cb-br"></div>
         <div class="book-pages" id="bookPages">
           <div class="page-box left-page" id="leftPageBox">
-            <img id="leftImg" src="" alt="Trang trái" />
+            <img id="leftImg" src="" alt="" />
             <div class="spine-shadow-left"></div>
             <div class="edge-shadow-left"></div>
             <div class="page-number" id="leftNum"></div>
           </div>
           <div class="page-box right-page" id="rightPageBox">
-            <img id="rightImg" src="" alt="Trang phải" />
+            <img id="rightImg" src="" alt="" />
             <div class="spine-shadow-right" id="rightSpine"></div>
             <div class="edge-shadow-right"></div>
             <div class="page-number" id="rightNum"></div>
@@ -421,7 +423,8 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
   </footer>
 
   <script>
-    const pages = ${relativePagesJson};
+    // 100% self-contained embedded page image data (zero external dependencies)
+    const pages = ${embeddedPagesJson};
     const totalPages = pages.length;
     let currentIndex = 0;
     let viewMode = window.innerWidth < 768 ? 'single' : 'dual';
@@ -499,9 +502,15 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
         bookPages.classList.add('single-mode');
         leftBox.style.display = 'none';
         rightBox.style.width = '100%';
-        rightImg.style.visibility = 'visible';
-        rightImg.src = pages[currentIndex] || '';
-        rightNum.innerText = (currentIndex + 1) + ' / ' + totalPages;
+        if (pages[currentIndex]) {
+          rightImg.style.visibility = 'visible';
+          rightImg.src = pages[currentIndex];
+          rightNum.innerText = (currentIndex + 1) + ' / ' + totalPages;
+        } else {
+          rightImg.style.visibility = 'hidden';
+          rightImg.src = '';
+          rightNum.innerText = '';
+        }
         rightSpine.style.display = 'none';
         pageInput.value = currentIndex + 1;
       } else {
@@ -510,9 +519,15 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
         if (currentIndex === 0) {
           leftBox.style.display = 'none';
           rightBox.style.width = '100%';
-          rightImg.style.visibility = 'visible';
-          rightImg.src = pages[0] || '';
-          rightNum.innerText = '1';
+          if (pages[0]) {
+            rightImg.style.visibility = 'visible';
+            rightImg.src = pages[0];
+            rightNum.innerText = '1';
+          } else {
+            rightImg.style.visibility = 'hidden';
+            rightImg.src = '';
+            rightNum.innerText = '';
+          }
           rightSpine.style.display = 'none';
           pageInput.value = 1;
         } else {
@@ -521,21 +536,23 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
           const leftIdx = currentIndex % 2 === 1 ? currentIndex : currentIndex - 1;
           const rightIdx = leftIdx + 1;
 
-          if (leftIdx < totalPages) {
+          if (leftIdx < totalPages && pages[leftIdx]) {
             leftImg.style.visibility = 'visible';
-            leftImg.src = pages[leftIdx] || '';
+            leftImg.src = pages[leftIdx];
             leftNum.innerText = leftIdx + 1;
           } else {
             leftImg.style.visibility = 'hidden';
+            leftImg.src = '';
             leftNum.innerText = '';
           }
 
-          if (rightIdx < totalPages) {
+          if (rightIdx < totalPages && pages[rightIdx]) {
             rightImg.style.visibility = 'visible';
-            rightImg.src = pages[rightIdx] || '';
+            rightImg.src = pages[rightIdx];
             rightNum.innerText = rightIdx + 1;
           } else {
             rightImg.style.visibility = 'hidden';
+            rightImg.src = '';
             rightNum.innerText = '';
           }
 
