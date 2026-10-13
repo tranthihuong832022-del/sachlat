@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Subtle book paper texture and realistic shadows */
+.book-spine-shadow {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.05) 25%,
+    rgba(0, 0, 0, 0.25) 50%,
+    rgba(0, 0, 0, 0.05) 75%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.book-cover-depth {
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.22),
+    0 25px 60px rgba(0, 0, 0, 0.35);
+}
+
+.desk-wood-mat {
+  background-image: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+}
+
+/* Gilded gold edge for physical book feel */
+.book-edge-gilded {
+  background: linear-gradient(
+    to bottom,
+    #D4AF37 0%,
+    #FFF8DC 20%,
+    #AA771C 40%,
+    #FDF6C7 60%,
+    #8B6508 100%
+  );
+}
+
+/* Hanging silk ribbon bookmark */
+.ribbon-bookmark {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ribbon-bookmark:hover {
+  transform: translateY(4px);
+}
+

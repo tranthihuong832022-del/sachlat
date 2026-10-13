@@ -1,0 +1,7 @@
+{
+  "name": "Ebook Lật Trang",
+  "description": "Ứng dụng đọc file PDF như sách giấy với hiệu ứng lật trang 3D sống động, âm thanh chân thực và tùy biến giao diện.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

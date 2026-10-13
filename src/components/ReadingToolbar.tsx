@@ -1,0 +1,442 @@
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Maximize,
+  Minimize,
+  Volume2,
+  VolumeX,
+  Palette,
+  FolderOpen,
+  LayoutGrid,
+  Download,
+  FileDown,
+  Image as ImageIcon,
+  Play,
+  Pause,
+  Bookmark,
+  Check,
+} from 'lucide-react';
+import { ThemeConfig } from '../utils/theme';
+
+interface ReadingToolbarProps {
+  currentPage: number; // 1-based
+  totalPages: number;
+  onPrevPage: () => void;
+  onNextPage: () => void;
+  onGoToPage: (page: number) => void;
+  zoom: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onResetZoom: () => void;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
+  isMuted: boolean;
+  volume: number;
+  onToggleMute: () => void;
+  onVolumeChange: (vol: number) => void;
+  onOpenThemeModal: () => void;
+  onOpenFileSelector: () => void;
+  onOpenThumbnails: () => void;
+  onDownloadPdf: () => void;
+  onDownloadCurrentPage: () => void;
+  isAutoFlipping?: boolean;
+  onToggleAutoFlip?: () => void;
+  isBookmarked?: boolean;
+  onToggleBookmark?: () => void;
+  theme: ThemeConfig;
+  bookTitle?: string;
+}
+
+export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
+  currentPage,
+  totalPages,
+  onPrevPage,
+  onNextPage,
+  onGoToPage,
+  zoom,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom,
+  isFullscreen,
+  onToggleFullscreen,
+  isMuted,
+  volume,
+  onToggleMute,
+  onVolumeChange,
+  onOpenThemeModal,
+  onOpenFileSelector,
+  onOpenThumbnails,
+  onDownloadPdf,
+  onDownloadCurrentPage,
+  isAutoFlipping = false,
+  onToggleAutoFlip,
+  isBookmarked = false,
+  onToggleBookmark,
+  theme,
+  bookTitle,
+}) => {
+  const [pageInputVal, setPageInputVal] = useState<string>(String(currentPage));
+  const [showVolumePopover, setShowVolumePopover] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+
+  const volumePopoverRef = useRef<HTMLDivElement>(null);
+  const downloadMenuRef = useRef<HTMLDivElement>(null);
+
+  // Sync page input value with currentPage
+  useEffect(() => {
+    setPageInputVal(String(currentPage));
+  }, [currentPage]);
+
+  // Click outside to close menus
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (volumePopoverRef.current && !volumePopoverRef.current.contains(e.target as Node)) {
+        setShowVolumePopover(false);
+      }
+      if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target as Node)) {
+        setShowDownloadMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handlePageInputSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = parseInt(pageInputVal, 10);
+    if (!isNaN(parsed) && parsed >= 1 && parsed <= totalPages) {
+      onGoToPage(parsed);
+    } else {
+      setPageInputVal(String(currentPage));
+    }
+  };
+
+  const progressPercent = totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0;
+  const isAtFirst = currentPage <= 1;
+  const isAtLast = currentPage >= totalPages;
+
+  return (
+    <div
+      className="w-full shadow-md border-b transition-colors z-40 shrink-0 select-none"
+      style={{
+        backgroundColor: theme.surface,
+        borderColor: theme.surfaceBorder,
+        color: theme.text,
+      }}
+    >
+      {/* Main bar */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-5 py-2 flex flex-wrap items-center justify-between gap-2.5">
+        
+        {/* Left Area: File Management & Outline */}
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <button
+            onClick={onOpenFileSelector}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border shadow-2xs hover:bg-black/5 active:scale-95 transition-all cursor-pointer shrink-0"
+            style={{
+              borderColor: theme.surfaceBorder,
+              color: theme.primary,
+            }}
+            title="Mở file PDF khác từ máy tính"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Mở file khác</span>
+          </button>
+
+          <button
+            onClick={onOpenThumbnails}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border hover:bg-black/5 transition-colors cursor-pointer shrink-0"
+            style={{ borderColor: theme.surfaceBorder }}
+            title="Xem danh sách trang thu nhỏ"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Mục lục ({totalPages})</span>
+          </button>
+
+          {/* Prominent Download Button with Popover */}
+          <div className="relative" ref={downloadMenuRef}>
+            <button
+              onClick={() => setShowDownloadMenu((prev) => !prev)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
+              style={{
+                backgroundColor: theme.primary,
+                color: theme.primaryText,
+              }}
+              title="Tải sách hoặc trang hiện tại về máy"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Tải về</span>
+            </button>
+
+            {/* Download dropdown menu */}
+            {showDownloadMenu && (
+              <div
+                className="absolute left-0 top-full mt-2 w-56 rounded-xl border shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95"
+                style={{
+                  backgroundColor: theme.surface,
+                  borderColor: theme.surfaceBorder,
+                  color: theme.text,
+                }}
+              >
+                <div className="px-3 py-2 border-b text-[11px] font-semibold" style={{ borderColor: theme.surfaceBorder, color: theme.mutedText }}>
+                  TÙY CHỌN TẢI XUỐNG
+                </div>
+                
+                <button
+                  onClick={() => {
+                    setShowDownloadMenu(false);
+                    onDownloadPdf();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-black/5 transition-colors text-left cursor-pointer"
+                >
+                  <FileDown className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <div>
+                    <div className="font-semibold">Tải file PDF trọn vẹn</div>
+                    <div className="text-[10px] opacity-70">Toàn bộ {totalPages} trang sách (.pdf)</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowDownloadMenu(false);
+                    onDownloadCurrentPage();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-black/5 transition-colors text-left cursor-pointer"
+                >
+                  <ImageIcon className="w-4 h-4 text-blue-600 shrink-0" />
+                  <div>
+                    <div className="font-semibold">Tải trang hiện tại</div>
+                    <div className="text-[10px] opacity-70">Ảnh nét cao trang {currentPage} (.png)</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Book Title label */}
+          {bookTitle && (
+            <span
+              className="text-xs font-serif font-medium truncate max-w-[100px] sm:max-w-[180px] lg:max-w-[240px] opacity-80 pl-1 border-l pl-2 hidden sm:inline"
+              style={{ borderColor: theme.surfaceBorder }}
+              title={bookTitle}
+            >
+              {bookTitle}
+            </span>
+          )}
+        </div>
+
+        {/* Center Area: Page Navigation & Progress */}
+        <div className="flex items-center gap-2">
+          {/* Previous Page */}
+          <button
+            onClick={onPrevPage}
+            disabled={isAtFirst}
+            className={`p-1.5 sm:p-2 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+              isAtFirst
+                ? 'opacity-35 cursor-not-allowed'
+                : 'hover:bg-black/5 active:scale-95'
+            }`}
+            style={{ borderColor: theme.surfaceBorder }}
+            title="Trang trước (Phím mũi tên Trái)"
+            aria-label="Trang trước"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Page input form */}
+          <form onSubmit={handlePageInputSubmit} className="flex items-center gap-1.5 text-xs">
+            <span className="hidden md:inline font-medium" style={{ color: theme.mutedText }}>
+              Trang
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={pageInputVal}
+              onChange={(e) => setPageInputVal(e.target.value)}
+              onBlur={handlePageInputSubmit}
+              className="w-12 h-7.5 sm:h-8 text-center font-bold rounded-lg border text-xs focus:outline-hidden focus:ring-2 transition-all"
+              style={{
+                backgroundColor: theme.bg,
+                borderColor: theme.surfaceBorder,
+                color: theme.text,
+              }}
+              title="Nhập số trang và nhấn Enter để chuyển đến"
+            />
+            <span className="font-semibold text-xs opacity-75">
+              / {totalPages}
+            </span>
+          </form>
+
+          {/* Next Page */}
+          <button
+            onClick={onNextPage}
+            disabled={isAtLast}
+            className={`p-1.5 sm:p-2 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+              isAtLast
+                ? 'opacity-35 cursor-not-allowed'
+                : 'hover:bg-black/5 active:scale-95'
+            }`}
+            style={{ borderColor: theme.surfaceBorder }}
+            title="Trang sau (Phím mũi tên Phải)"
+            aria-label="Trang sau"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          {/* Bookmark Button */}
+          {onToggleBookmark && (
+            <button
+              onClick={onToggleBookmark}
+              className={`p-1.5 sm:p-2 rounded-lg border transition-all cursor-pointer ${
+                isBookmarked ? 'text-amber-500 bg-amber-500/10' : 'hover:bg-black/5 opacity-70'
+              }`}
+              style={{ borderColor: theme.surfaceBorder }}
+              title={isBookmarked ? 'Bỏ đánh dấu trang này' : 'Đánh dấu trang này'}
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
+            </button>
+          )}
+
+          {/* Auto Flip / Slideshow Toggle */}
+          {onToggleAutoFlip && (
+            <button
+              onClick={onToggleAutoFlip}
+              className={`hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                isAutoFlipping ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'hover:bg-black/5'
+              }`}
+              style={{ borderColor: isAutoFlipping ? undefined : theme.surfaceBorder }}
+              title={isAutoFlipping ? 'Dừng lật tự động' : 'Tự động lật trang mỗi 5 giây (Trình chiếu giảng dạy)'}
+            >
+              {isAutoFlipping ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              <span className="hidden lg:inline">{isAutoFlipping ? 'Đang chiếu' : 'Tự động'}</span>
+            </button>
+          )}
+        </div>
+
+        {/* Right Area: Zoom, Volume, Theme, Fullscreen */}
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          {/* Zoom controls */}
+          <div className="hidden sm:flex items-center gap-0.5 border rounded-lg p-0.5" style={{ borderColor: theme.surfaceBorder }}>
+            <button
+              onClick={onZoomOut}
+              disabled={zoom <= 0.75}
+              className="p-1.5 rounded hover:bg-black/5 disabled:opacity-30 transition-all cursor-pointer"
+              title="Thu nhỏ (-)"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onResetZoom}
+              className="px-1.5 text-[11px] font-mono font-medium hover:bg-black/5 rounded transition-colors"
+              title="Đặt lại kích thước 100%"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              onClick={onZoomIn}
+              disabled={zoom >= 2.0}
+              className="p-1.5 rounded hover:bg-black/5 disabled:opacity-30 transition-all cursor-pointer"
+              title="Phóng to (+)"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Audio toggle & volume popover */}
+          <div className="relative" ref={volumePopoverRef}>
+            <button
+              onClick={() => setShowVolumePopover((prev) => !prev)}
+              className={`p-2 rounded-lg border transition-all cursor-pointer ${
+                isMuted ? 'opacity-60' : 'hover:bg-black/5'
+              }`}
+              style={{
+                borderColor: theme.surfaceBorder,
+                color: isMuted ? theme.mutedText : theme.primary,
+              }}
+              title={isMuted ? 'Âm thanh lật trang đang tắt (Nhấp để bật)' : `Âm thanh lật trang (${Math.round(volume * 100)}%)`}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+
+            {/* Volume popover */}
+            {showVolumePopover && (
+              <div
+                className="absolute right-0 top-full mt-2 p-3 rounded-xl border shadow-xl z-50 w-52 flex flex-col gap-2.5 animate-in fade-in zoom-in-95"
+                style={{
+                  backgroundColor: theme.surface,
+                  borderColor: theme.surfaceBorder,
+                  color: theme.text,
+                }}
+              >
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span>Âm thanh lật trang</span>
+                  <button
+                    onClick={onToggleMute}
+                    className="text-[11px] underline opacity-80 hover:opacity-100"
+                  >
+                    {isMuted ? 'Bật âm' : 'Tắt âm'}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button onClick={onToggleMute} className="opacity-70 hover:opacity-100">
+                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={isMuted ? 0 : volume}
+                    onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+                    className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-black/10 accent-current"
+                    style={{ accentColor: theme.primary }}
+                  />
+                  <span className="text-[11px] font-mono w-7 text-right">
+                    {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Theme Palette Button */}
+          <button
+            onClick={onOpenThemeModal}
+            className="p-2 rounded-lg border hover:bg-black/5 transition-all cursor-pointer"
+            style={{ borderColor: theme.surfaceBorder }}
+            title="Tùy chỉnh màu sắc giao diện"
+          >
+            <Palette className="w-4 h-4" />
+          </button>
+
+          {/* Fullscreen Button */}
+          <button
+            onClick={onToggleFullscreen}
+            className="p-2 rounded-lg border hover:bg-black/5 transition-all cursor-pointer"
+            style={{ borderColor: theme.surfaceBorder }}
+            title={isFullscreen ? 'Thoát toàn màn hình' : 'Xem toàn màn hình'}
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Thin Reading Progress Indicator Bar at bottom of toolbar */}
+      <div className="w-full h-1 bg-black/5 overflow-hidden relative">
+        <div
+          className="h-full transition-all duration-300 ease-out"
+          style={{
+            width: `${progressPercent}%`,
+            backgroundColor: theme.primary,
+          }}
+          title={`Tiến độ đọc: ${progressPercent}%`}
+        />
+      </div>
+    </div>
+  );
+};
