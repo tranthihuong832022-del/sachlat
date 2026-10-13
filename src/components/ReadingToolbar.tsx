@@ -14,11 +14,13 @@ import {
   LayoutGrid,
   Download,
   FileDown,
+  Archive,
   Image as ImageIcon,
   Play,
   Pause,
   Bookmark,
-  Check,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { ThemeConfig } from '../utils/theme';
 
@@ -41,8 +43,10 @@ interface ReadingToolbarProps {
   onOpenThemeModal: () => void;
   onOpenFileSelector: () => void;
   onOpenThumbnails: () => void;
-  onDownloadPdf: () => void;
+  onDownloadPdf: () => void; // "Tải PDF gốc"
+  onDownloadZipFlipbook: () => void; // "Tải sách lật về" (gói ZIP)
   onDownloadCurrentPage: () => void;
+  isExportingZip?: boolean;
   isAutoFlipping?: boolean;
   onToggleAutoFlip?: () => void;
   isBookmarked?: boolean;
@@ -71,7 +75,9 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
   onOpenFileSelector,
   onOpenThumbnails,
   onDownloadPdf,
+  onDownloadZipFlipbook,
   onDownloadCurrentPage,
+  isExportingZip = false,
   isAutoFlipping = false,
   onToggleAutoFlip,
   isBookmarked = false,
@@ -81,24 +87,18 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
 }) => {
   const [pageInputVal, setPageInputVal] = useState<string>(String(currentPage));
   const [showVolumePopover, setShowVolumePopover] = useState(false);
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
-
   const volumePopoverRef = useRef<HTMLDivElement>(null);
-  const downloadMenuRef = useRef<HTMLDivElement>(null);
 
   // Sync page input value with currentPage
   useEffect(() => {
     setPageInputVal(String(currentPage));
   }, [currentPage]);
 
-  // Click outside to close menus
+  // Click outside to close volume popover
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (volumePopoverRef.current && !volumePopoverRef.current.contains(e.target as Node)) {
         setShowVolumePopover(false);
-      }
-      if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target as Node)) {
-        setShowDownloadMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -131,11 +131,11 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
       {/* Main bar */}
       <div className="max-w-7xl mx-auto px-3 sm:px-5 py-2 flex flex-wrap items-center justify-between gap-2.5">
         
-        {/* Left Area: File Management & Outline */}
+        {/* Left Area: File Management, Outline & 2 Explicit Download Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <button
             onClick={onOpenFileSelector}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border shadow-2xs hover:bg-black/5 active:scale-95 transition-all cursor-pointer shrink-0"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold border shadow-2xs hover:bg-black/5 active:scale-95 transition-all cursor-pointer shrink-0"
             style={{
               borderColor: theme.surfaceBorder,
               color: theme.primary,
@@ -156,70 +156,43 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
             <span className="hidden md:inline">Mục lục ({totalPages})</span>
           </button>
 
-          {/* Prominent Download Button with Popover */}
-          <div className="relative" ref={downloadMenuRef}>
-            <button
-              onClick={() => setShowDownloadMenu((prev) => !prev)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
-              style={{
-                backgroundColor: theme.primary,
-                color: theme.primaryText,
-              }}
-              title="Tải sách hoặc trang hiện tại về máy"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Tải về</span>
-            </button>
-
-            {/* Download dropdown menu */}
-            {showDownloadMenu && (
-              <div
-                className="absolute left-0 top-full mt-2 w-56 rounded-xl border shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95"
-                style={{
-                  backgroundColor: theme.surface,
-                  borderColor: theme.surfaceBorder,
-                  color: theme.text,
-                }}
-              >
-                <div className="px-3 py-2 border-b text-[11px] font-semibold" style={{ borderColor: theme.surfaceBorder, color: theme.mutedText }}>
-                  TÙY CHỌN TẢI XUỐNG
-                </div>
-                
-                <button
-                  onClick={() => {
-                    setShowDownloadMenu(false);
-                    onDownloadPdf();
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-black/5 transition-colors text-left cursor-pointer"
-                >
-                  <FileDown className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <div>
-                    <div className="font-semibold">Tải file PDF trọn vẹn</div>
-                    <div className="text-[10px] opacity-70">Toàn bộ {totalPages} trang sách (.pdf)</div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setShowDownloadMenu(false);
-                    onDownloadCurrentPage();
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-black/5 transition-colors text-left cursor-pointer"
-                >
-                  <ImageIcon className="w-4 h-4 text-blue-600 shrink-0" />
-                  <div>
-                    <div className="font-semibold">Tải trang hiện tại</div>
-                    <div className="text-[10px] opacity-70">Ảnh nét cao trang {currentPage} (.png)</div>
-                  </div>
-                </button>
-              </div>
+          {/* BUTTON 1: "Tải sách lật về" (Gói ZIP mở offline có index.html & PDF) */}
+          <button
+            onClick={onDownloadZipFlipbook}
+            disabled={isExportingZip}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs transition-all active:scale-95 hover:opacity-95 disabled:opacity-50 cursor-pointer shrink-0"
+            style={{
+              backgroundColor: theme.primary,
+              color: theme.primaryText,
+            }}
+            title="Tải gói ZIP sách lật 3D mở không cần Internet (chứa file index.html, PDF gốc và ảnh trang)"
+          >
+            {isExportingZip ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Archive className="w-3.5 h-3.5" />
             )}
-          </div>
+            <span>{isExportingZip ? 'Đang nén ZIP...' : 'Tải sách lật về'}</span>
+          </button>
+
+          {/* BUTTON 2: "Tải PDF gốc" */}
+          <button
+            onClick={onDownloadPdf}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold border shadow-2xs hover:bg-black/5 active:scale-95 transition-all cursor-pointer shrink-0"
+            style={{
+              borderColor: theme.surfaceBorder,
+              color: theme.text,
+            }}
+            title="Tải file PDF ban đầu để in ấn hoặc nộp bài"
+          >
+            <FileDown className="w-3.5 h-3.5 text-stone-600 dark:text-stone-300" />
+            <span className="hidden sm:inline">Tải PDF gốc</span>
+          </button>
 
           {/* Book Title label */}
           {bookTitle && (
             <span
-              className="text-xs font-serif font-medium truncate max-w-[100px] sm:max-w-[180px] lg:max-w-[240px] opacity-80 pl-1 border-l pl-2 hidden sm:inline"
+              className="text-xs font-serif font-medium truncate max-w-[90px] sm:max-w-[140px] lg:max-w-[180px] opacity-75 pl-1 border-l pl-2 hidden md:inline"
               style={{ borderColor: theme.surfaceBorder }}
               title={bookTitle}
             >
@@ -376,14 +349,14 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
                   <span>Âm thanh lật trang</span>
                   <button
                     onClick={onToggleMute}
-                    className="text-[11px] underline opacity-80 hover:opacity-100"
+                    className="text-[11px] underline opacity-80 hover:opacity-100 cursor-pointer"
                   >
                     {isMuted ? 'Bật âm' : 'Tắt âm'}
                   </button>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button onClick={onToggleMute} className="opacity-70 hover:opacity-100">
+                  <button onClick={onToggleMute} className="opacity-70 hover:opacity-100 cursor-pointer">
                     {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </button>
                   <input

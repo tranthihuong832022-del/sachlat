@@ -33,6 +33,8 @@ import {
   SAMPLE_BOOKS,
 } from './utils/sampleBook';
 import { downloadPagesAsPdf } from './utils/samplePdfDownload';
+import { exportStandaloneHtmlFlipbook } from './utils/exportStandaloneHtml';
+import { exportFlipbookZipPackage, ZipExportProgress } from './utils/exportZipPackage';
 import { UploadArea } from './components/UploadArea';
 import { FlipBookViewer } from './components/FlipBookViewer';
 import { ReadingToolbar } from './components/ReadingToolbar';
@@ -58,6 +60,10 @@ export default function App() {
     total?: number;
   }>({ step: '', percent: 0 });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // ZIP export state
+  const [isExportingZip, setIsExportingZip] = useState<boolean>(false);
+  const [zipProgress, setZipProgress] = useState<ZipExportProgress | null>(null);
 
   // Viewer Controls
   const [zoom, setZoom] = useState<number>(1.0);
@@ -207,6 +213,44 @@ export default function App() {
     } catch (err) {
       console.error('Failed to download image:', err);
       showToast('Không thể tải ảnh trang này.', 'error');
+    }
+  };
+
+  // Download Offline 3D Flipbook ZIP Package (Contains index.html, document.pdf, pages/, HUONG_DAN.txt)
+  const handleDownloadZipFlipbook = async () => {
+    if (pages.length === 0) return;
+    setIsExportingZip(true);
+    setZipProgress({ step: 'Khởi tạo gói ZIP sách lật...', percent: 5 });
+    try {
+      showToast('Đang đóng gói ZIP sách lật 3D...', 'info');
+      await exportFlipbookZipPackage(
+        pages,
+        bookTitle || 'Ebook_Lat_Trang',
+        uploadedFile,
+        theme.primary,
+        (progress) => setZipProgress(progress)
+      );
+      showToast('Đã tải gói ZIP sách lật 3D thành công! Giải nén và mở index.html để đọc ngoại tuyến.', 'success');
+    } catch (err: any) {
+      console.error('Failed to export ZIP package:', err);
+      showToast(`Không thể xuất gói ZIP: ${err?.message || 'Lỗi xử lý'}`, 'error');
+    } finally {
+      setIsExportingZip(false);
+      setZipProgress(null);
+    }
+  };
+
+  // Download Standalone Offline 3D HTML Flipbook (Preserves 100% 3D page flip and sound)
+  const handleDownloadHtmlFlipbook = () => {
+    if (pages.length === 0) return;
+    try {
+      const cleanTitle = bookTitle || 'Ebook_Lat_Trang';
+      showToast('Đang đóng gói file Ebook Lật Trang 3D tự chạy...', 'info');
+      exportStandaloneHtmlFlipbook(pages, cleanTitle, theme.primary);
+      showToast('Đã tải file Ebook 3D (.html)! Mở bằng trình duyệt để lật trang offline.', 'success');
+    } catch (err) {
+      console.error('Failed to export standalone HTML:', err);
+      showToast('Không thể xuất file Ebook tự chạy.', 'error');
     }
   };
 
@@ -532,7 +576,9 @@ export default function App() {
               onOpenFileSelector={handleOpenFileSelector}
               onOpenThumbnails={() => setIsThumbnailsOpen(true)}
               onDownloadPdf={handleDownloadPdf}
+              onDownloadZipFlipbook={handleDownloadZipFlipbook}
               onDownloadCurrentPage={handleDownloadCurrentPageImage}
+              isExportingZip={isExportingZip}
               isAutoFlipping={isAutoFlipping}
               onToggleAutoFlip={() => setIsAutoFlipping((prev) => !prev)}
               isBookmarked={isBookmarked}
@@ -606,6 +652,26 @@ export default function App() {
         }}
         theme={theme}
       />
+
+      {/* ZIP Packaging Progress Modal / Banner */}
+      {isExportingZip && zipProgress && (
+        <div className="fixed top-18 right-6 z-50 bg-white dark:bg-stone-800 border border-emerald-500 rounded-2xl p-4 shadow-2xl flex items-center gap-3.5 animate-in slide-in-from-top-3 max-w-sm">
+          <div className="w-8 h-8 rounded-full border-3 border-emerald-500 border-t-transparent animate-spin shrink-0" />
+          <div className="text-xs flex-1">
+            <div className="font-bold text-stone-900 dark:text-stone-100 flex items-center justify-between">
+              <span>Đang tạo gói ZIP sách lật...</span>
+              <span className="font-mono text-emerald-600 font-bold">{zipProgress.percent}%</span>
+            </div>
+            <div className="text-stone-500 dark:text-stone-400 mt-0.5 text-[11px]">{zipProgress.step}</div>
+            <div className="w-full h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full mt-2 overflow-hidden">
+              <div
+                className="h-full bg-emerald-600 rounded-full transition-all duration-200"
+                style={{ width: `${zipProgress.percent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification Banner */}
       {toast && (
