@@ -1,6 +1,5 @@
 import JSZip from 'jszip';
 import { RenderedPage } from './pdfLoader';
-import { downloadPagesAsPdf } from './samplePdfDownload';
 
 export interface ZipExportProgress {
   step: string;
@@ -9,7 +8,7 @@ export interface ZipExportProgress {
 
 /**
  * Builds an offline, self-contained ZIP package of the 3D Flipbook:
- * - index.html: Offline 3D Flipbook with interactive controls, sound, themes, and zoom
+ * - index.html: Offline 3D Flipbook with interactive controls, sound, themes, zoom, swipe & keyboard
  * - document.pdf: The original PDF file (or generated PDF from pages)
  * - pages/: Folder with all high-resolution page images
  * - HUONG_DAN.txt: Vietnamese instructions for teachers & students
@@ -22,34 +21,49 @@ export async function exportFlipbookZipPackage(
   onProgress?: (progress: ZipExportProgress) => void
 ): Promise<void> {
   const zip = new JSZip();
-  const cleanTitle = (title || 'Ebook_Lat_Trang').replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_');
+  const safeTitle = (title || 'Ebook_Lat_Trang').trim();
+  const cleanTitle = safeTitle.replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_');
 
   onProgress?.({ step: 'Đang chuẩn bị dữ liệu trang...', percent: 10 });
 
   // 1. Add README instructions in Vietnamese
-  const readmeContent = `=====================================================
-SÁCH ĐIỆN TỬ LẬT TRANG 3D (EBOOK LẬT TRANG)
-Cuốn sách: ${title}
+  const readmeContent = `======================================================================
+SÁCH ĐIỆN TỬ LẬT TRANG 3D NGOẠI TUYẾN (EBOOK LẬT TRANG)
+Cuốn sách: ${safeTitle}
 Tổng số trang: ${pages.length} trang
-=====================================================
+Thời gian đóng gói: ${new Date().toLocaleString('vi-VN')}
+======================================================================
 
-HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
+HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET):
 
-1. Mở sách lật 3D:
-   - Nhấp đúp chuột vào tệp "index.html".
-   - Sách sẽ tự động mở trên trình duyệt (Chrome, Safari, Edge, Cốc Cốc, Firefox).
-   - Bạn có thể lật trang bằng cách:
-     + Bấm phím mũi tên Trái / Phải trên bàn phím.
-     + Nhấp chuột vào trang sách hoặc nút mũi tên hai bên.
-     + Vuốt chạm trên màn hình cảm ứng nếu dùng điện thoại hoặc máy tính bảng.
-   - Các nút chức năng: Phóng to (+), Thu nhỏ (-), Bật/Tắt âm thanh giấy, Đổi màu giao diện, Toàn màn hình.
+1. MỞ SÁCH LẬT 3D:
+   - Bước 1: Giải nén toàn bộ tệp ZIP này vào một thư mục trên máy tính của bạn.
+   - Bước 2: Nhấp đúp chuột vào tệp "index.html".
+   - Sách sẽ lập tức mở trong trình duyệt web (Google Chrome, Cốc Cốc, Microsoft Edge, Safari, Firefox).
+   - KHÔNG CẦN KẾT NỐI INTERNET: Sách đã chứa đầy đủ mã nguồn, hình ảnh và âm thanh lật trang.
 
-2. Tệp PDF gốc:
-   - Tệp "document.pdf" trong thư mục này là tệp PDF gốc để in ấn hoặc đọc trên các phần mềm PDF truyền thống.
+2. CÁCH LẬT TRANG VÀ THAO TÁC:
+   - Lật trang kế tiếp:
+     + Nhấp chuột vào trang bên phải hoặc nút mũi tên (›) ở mép phải.
+     + Bấm phím mũi tên [Sang Phải] hoặc phím [Space] trên bàn phím.
+     + Vuốt sang trái trên màn hình cảm ứng (iPad, điện thoại).
+   - Lật trang trước đó:
+     + Nhấp chuột vào trang bên trái hoặc nút mũi tên (‹) ở mép trái.
+     + Bấm phím mũi tên [Sang Trái] trên bàn phím.
+     + Vuốt sang phải trên màn hình cảm ứng.
+   - Nhảy nhanh đến trang: Nhập số trang vào ô "Trang [...]" ở thanh dưới cùng và nhấn Enter.
+   - Phóng to / Thu nhỏ: Dùng nút [🔍+] và [🔍-], hoặc giữ phím Ctrl và lăn chuột.
+   - Đổi màu giao diện: Nhấp vào các chấm màu ở góc trên để chọn phông nền phù hợp với mắt (Giấy mộc, Ngọc bích, Rừng xanh, Lavender, hoặc Chế độ ban đêm).
+   - Bật / Tắt âm thanh: Nhấp nút [Âm thanh: Bật / Tắt] ở thanh trên cùng.
+   - Toàn màn hình: Nhấp nút [Toàn màn hình] để có trải nghiệm đọc tập trung như sách thật.
 
-3. Chia sẻ cho học sinh và đồng nghiệp:
-   - Bạn có thể nén hoặc gửi toàn bộ thư mục này cho học sinh qua Zalo, Email, Google Drive hoặc USB. Người nhận chỉ cần mở "index.html" là đọc được ngay.
-=====================================================`;
+3. TỆP PDF GỐC (document.pdf):
+   - Tệp "document.pdf" đi kèm là tệp tài liệu PDF gốc dùng để in ấn, photo hoặc lưu trữ bài giảng.
+
+4. CHIA SẺ CHO HỌC SINH VÀ ĐỒNG NGHIỆP:
+   - Giáo viên có thể gửi cả tệp ZIP này qua Zalo, Email, Google Drive, OneDrive hoặc copy vào USB.
+   - Người nhận chỉ cần giải nén và mở tệp "index.html" là có thể đọc ngay lập tức.
+======================================================================`;
   zip.file('HUONG_DAN.txt', readmeContent);
 
   // 2. Add original PDF file
@@ -58,7 +72,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
     const pdfBuffer = await originalPdfFile.arrayBuffer();
     zip.file('document.pdf', pdfBuffer);
   } else {
-    // Generate PDF blob from rendered pages if no file was uploaded
+    // Generate valid PDF 1.4 binary blob from rendered pages if no file was uploaded
     const objects: string[] = [];
     const xrefOffsets: number[] = [];
     const addObj = (c: string) => { objects.push(c); return objects.length; };
@@ -108,7 +122,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
   }
 
   // 3. Add individual high-resolution page images to pages/ directory
-  onProgress?.({ step: 'Đang nén các trang ảnh...', percent: 40 });
+  onProgress?.({ step: 'Đang lưu trữ các trang ảnh...', percent: 40 });
   const pagesFolder = zip.folder('pages')!;
   const pageImageRelativePaths: string[] = [];
 
@@ -123,13 +137,20 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
   // 4. Generate standalone index.html referencing local relative page paths
   onProgress?.({ step: 'Đang tạo giao diện lật sách ngoại tuyến...', percent: 65 });
   const relativePagesJson = JSON.stringify(pageImageRelativePaths);
+  const escapedTitle = safeTitle.replace(/[&<>"']/g, (m) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[m] || m));
 
   const standaloneHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} - Sách Lật 3D Ngoại Tuyến</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
+  <title>${escapedTitle} - Sách Lật 3D Ngoại Tuyến</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -142,7 +163,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
       --casing: #78350F;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       overflow: hidden;
@@ -151,6 +172,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
       flex-direction: column;
       user-select: none;
       -webkit-user-select: none;
+      transition: background-color 0.3s ease;
     }
     header {
       height: 54px;
@@ -161,6 +183,8 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
       justify-content: space-between;
       padding: 0 16px;
       z-index: 50;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .brand {
       display: flex;
@@ -168,23 +192,40 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
       gap: 10px;
       font-weight: 700;
       font-size: 15px;
+      min-width: 0;
     }
     .brand-icon {
-      width: 30px; height: 30px; border-radius: 8px;
+      width: 32px; height: 32px; border-radius: 8px;
       background: var(--primary); color: white;
-      display: flex; align-items: center; justify-content: center; font-size: 15px;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+      flex-shrink: 0;
     }
-    .tools { display: flex; align-items: center; gap: 8px; }
+    .brand-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 260px;
+    }
+    @media (max-width: 640px) {
+      .brand-title { max-width: 130px; font-size: 13px; }
+    }
+    .tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
     .btn {
-      padding: 6px 12px; border-radius: 6px;
+      padding: 6px 10px; border-radius: 7px;
       border: 1px solid var(--border); background: var(--surface);
       color: var(--text); font-size: 12px; font-weight: 600;
       cursor: pointer; display: flex; align-items: center; gap: 5px;
-      transition: all 0.15s;
+      transition: all 0.15s; white-space: nowrap;
     }
-    .btn:hover { background: rgba(0,0,0,0.04); }
-    .btn:active { transform: scale(0.97); }
+    .btn:hover { background: rgba(0,0,0,0.05); }
+    .btn:active { transform: scale(0.96); }
     .btn-primary { background: var(--primary); color: #FFF; border-color: var(--primary); }
+    .btn-primary:hover { opacity: 0.95; }
     .stage {
       flex: 1; display: flex; align-items: center; justify-content: center;
       position: relative; overflow: hidden;
@@ -192,12 +233,13 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
     .book-wrap {
       perspective: 2600px;
       display: flex; align-items: center; justify-content: center;
-      transition: transform 0.2s ease-out;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: center center;
     }
     .book-casing {
       background: var(--casing);
-      padding: 10px; border-radius: 10px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.15);
+      padding: 10px; border-radius: 12px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.32), 0 2px 10px rgba(0,0,0,0.18);
       position: relative;
     }
     .corner-brass {
@@ -211,6 +253,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
       display: flex; background: #FFFFFF; border-radius: 4px;
       overflow: hidden; height: min(74vh, 780px);
       aspect-ratio: 2 / 1.414; position: relative;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.06);
     }
     .single-mode .book-pages { aspect-ratio: 1 / 1.414; }
     .page-box {
@@ -222,91 +265,112 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
     .page-box img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
     .left-page { border-right: 1px solid #E5E7EB; }
     .spine-shadow-left {
-      position: absolute; right: 0; top: 0; bottom: 0; width: 32px;
-      background: linear-gradient(to left, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0.03) 60%, transparent 100%);
-      pointer-events: none;
+      position: absolute; right: 0; top: 0; bottom: 0; width: 34px;
+      background: linear-gradient(to left, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.04) 60%, transparent 100%);
+      pointer-events: none; z-index: 10;
     }
     .spine-shadow-right {
-      position: absolute; left: 0; top: 0; bottom: 0; width: 32px;
-      background: linear-gradient(to right, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0.03) 60%, transparent 100%);
+      position: absolute; left: 0; top: 0; bottom: 0; width: 34px;
+      background: linear-gradient(to right, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.04) 60%, transparent 100%);
+      pointer-events: none; z-index: 10;
+    }
+    .edge-shadow-left {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 8px;
+      background: linear-gradient(to right, rgba(0,0,0,0.08) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .edge-shadow-right {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 8px;
+      background: linear-gradient(to left, rgba(0,0,0,0.08) 0%, transparent 100%);
       pointer-events: none;
     }
     .page-number {
       position: absolute; bottom: 8px; font-size: 11px; color: #9CA3AF; font-family: monospace;
+      padding: 2px 6px; background: rgba(255,255,255,0.7); border-radius: 4px;
     }
     .left-page .page-number { left: 16px; }
     .right-page .page-number { right: 16px; }
     .turning-leaf {
       position: absolute; top: 0; bottom: 0; right: 0; width: 50%;
       transform-origin: left center; transform-style: preserve-3d;
-      pointer-events: none; z-index: 30;
+      pointer-events: none; z-index: 35;
     }
+    .single-mode .turning-leaf { width: 100%; }
     .leaf-face {
       position: absolute; inset: 0; background: #FFF;
-      overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      overflow: hidden; box-shadow: 0 12px 36px rgba(0,0,0,0.28);
     }
     .leaf-front { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
     .leaf-back { transform: rotateY(180deg); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
     .leaf-face img { width: 100%; height: 100%; object-fit: contain; }
+    .leaf-shadow {
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(to right, rgba(0,0,0,0.22) 0%, transparent 60%);
+    }
     .side-arrow {
       position: absolute; top: 50%; transform: translateY(-50%);
       width: 48px; height: 48px; border-radius: 50%;
       background: var(--surface); border: 1.5px solid var(--border);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.15); display: flex;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18); display: flex;
       align-items: center; justify-content: center; cursor: pointer;
-      font-size: 20px; font-weight: bold; z-index: 40; transition: all 0.15s;
+      font-size: 24px; font-weight: bold; z-index: 40; transition: all 0.18s;
+      color: var(--text);
     }
-    .side-arrow:hover { transform: translateY(-50%) scale(1.08); }
-    .arrow-left { left: 20px; }
-    .arrow-right { right: 20px; }
+    .side-arrow:hover { transform: translateY(-50%) scale(1.1); background: var(--surface); }
+    .side-arrow:active { transform: translateY(-50%) scale(0.95); }
+    .arrow-left { left: 16px; }
+    .arrow-right { right: 16px; }
     .side-arrow.disabled { opacity: 0; pointer-events: none; }
     footer {
-      height: 46px; background: var(--surface);
+      height: 48px; background: var(--surface);
       border-top: 1px solid var(--border); display: flex;
       align-items: center; justify-content: space-between;
-      padding: 0 20px; font-size: 12px; color: var(--muted); z-index: 50;
+      padding: 0 16px; font-size: 12px; color: var(--muted); z-index: 50;
+      gap: 10px;
     }
     .page-input {
-      width: 46px; text-align: center; padding: 4px;
-      border: 1px solid var(--border); border-radius: 5px; font-weight: 700;
+      width: 48px; text-align: center; padding: 4px;
+      border: 1px solid var(--border); border-radius: 6px; font-weight: 700;
+      background: var(--surface); color: var(--text);
     }
+    .page-input:focus { outline: 2px solid var(--primary); }
     .theme-palette {
-      display: flex; align-items: center; gap: 4px;
+      display: flex; align-items: center; gap: 5px;
     }
     .color-dot {
-      width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2);
+      width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.18);
       cursor: pointer; transition: transform 0.15s;
     }
-    .color-dot:hover { transform: scale(1.15); }
+    .color-dot:hover { transform: scale(1.2); }
   </style>
 </head>
 <body>
   <header>
     <div class="brand">
       <div class="brand-icon">📖</div>
-      <span>${title}</span>
+      <span class="brand-title" title="${escapedTitle}">${escapedTitle}</span>
     </div>
     <div class="tools">
       <div class="theme-palette" title="Đổi màu không gian đọc">
-        <div class="color-dot" style="background: #F4EFEA;" onclick="setTheme('#F4EFEA', '#78350F')"></div>
-        <div class="color-dot" style="background: #EDF7F6;" onclick="setTheme('#EDF7F6', '#115E59')"></div>
-        <div class="color-dot" style="background: #F0F5ED;" onclick="setTheme('#F0F5ED', '#166534')"></div>
-        <div class="color-dot" style="background: #F5F3FF;" onclick="setTheme('#F5F3FF', '#5B21B6')"></div>
-        <div class="color-dot" style="background: #0F172A;" onclick="setTheme('#0F172A', '#0284C7', true)"></div>
+        <div class="color-dot" style="background: #F4EFEA;" title="Giấy Cổ Điển" onclick="setTheme('#F4EFEA', '#78350F')"></div>
+        <div class="color-dot" style="background: #EDF7F6;" title="Ngọc Bích" onclick="setTheme('#EDF7F6', '#115E59')"></div>
+        <div class="color-dot" style="background: #F0F5ED;" title="Thư Viện" onclick="setTheme('#F0F5ED', '#166534')"></div>
+        <div class="color-dot" style="background: #F5F3FF;" title="Thạch Anh" onclick="setTheme('#F5F3FF', '#5B21B6')"></div>
+        <div class="color-dot" style="background: #0F172A;" title="Đêm Trăng (Tối)" onclick="setTheme('#0F172A', '#0284C7', true)"></div>
       </div>
       <button class="btn" id="btnSound">🔊 Âm thanh: Bật</button>
       <button class="btn" id="btnMode">📖 2 Trang</button>
-      <button class="btn" id="btnZoomOut">🔍-</button>
-      <button class="btn" id="btnZoomReset">100%</button>
-      <button class="btn" id="btnZoomIn">🔍+</button>
-      <a href="document.pdf" download="${cleanTitle}.pdf" class="btn" title="Tải file PDF ban đầu">📄 File PDF gốc</a>
+      <button class="btn" id="btnZoomOut" title="Thu nhỏ">🔍-</button>
+      <button class="btn" id="btnZoomReset" title="Đặt lại 100%">100%</button>
+      <button class="btn" id="btnZoomIn" title="Phóng to">🔍+</button>
+      <a href="document.pdf" download="${cleanTitle}.pdf" class="btn" title="Tải file PDF ban đầu">📄 PDF gốc</a>
       <button class="btn btn-primary" id="btnFullscreen">⛶ Toàn màn hình</button>
     </div>
   </header>
 
-  <div class="stage">
-    <button class="side-arrow arrow-left" id="btnPrev">‹</button>
-    <button class="side-arrow arrow-right" id="btnNext">›</button>
+  <div class="stage" id="stageArea">
+    <button class="side-arrow arrow-left" id="btnPrev" title="Trang trước (Phím mũi tên Trái)">‹</button>
+    <button class="side-arrow arrow-right" id="btnNext" title="Trang sau (Phím mũi tên Phải)">›</button>
 
     <div class="book-wrap" id="bookWrap">
       <div class="book-casing" id="bookCasing">
@@ -318,19 +382,23 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
           <div class="page-box left-page" id="leftPageBox">
             <img id="leftImg" src="" alt="Trang trái" />
             <div class="spine-shadow-left"></div>
+            <div class="edge-shadow-left"></div>
             <div class="page-number" id="leftNum"></div>
           </div>
           <div class="page-box right-page" id="rightPageBox">
             <img id="rightImg" src="" alt="Trang phải" />
             <div class="spine-shadow-right" id="rightSpine"></div>
+            <div class="edge-shadow-right"></div>
             <div class="page-number" id="rightNum"></div>
           </div>
           <div class="turning-leaf" id="turningLeaf" style="display: none;">
             <div class="leaf-face leaf-front">
               <img id="leafFrontImg" src="" alt="" />
+              <div class="leaf-shadow"></div>
             </div>
             <div class="leaf-face leaf-back">
               <img id="leafBackImg" src="" alt="" />
+              <div class="leaf-shadow"></div>
             </div>
           </div>
         </div>
@@ -339,13 +407,17 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
   </div>
 
   <footer>
-    <div>Phím <strong>Trái / Phải</strong> hoặc nhấp chuột vào trang để lật • 100% Ngoại tuyến</div>
-    <div style="display: flex; align-items: center; gap: 8px;">
+    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+      Phím <strong>Trái / Phải</strong> hoặc vuốt màn hình • <strong>100% Ngoại tuyến</strong>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
       <span>Trang</span>
-      <input type="text" class="page-input" id="pageInput" value="1" />
+      <input type="text" class="page-input" id="pageInput" value="1" title="Nhập số trang và nhấn Enter" />
       <span id="pageTotal">/ ${pages.length}</span>
     </div>
-    <div>Sách Điện Tử Lật Trang 3D Offline</div>
+    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+      <span>Ebook Lật Trang 3D Offline</span>
+    </div>
   </footer>
 
   <script>
@@ -357,7 +429,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
     let zoomLevel = 1.0;
     let isFlipping = false;
 
-    // Web Audio synthesizer for paper turn
+    // Web Audio synthesizer for paper turn (100% offline, zero audio files required)
     let audioCtx = null;
     function playFlipSound() {
       if (!isSoundOn) return;
@@ -404,6 +476,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
     const leafBackImg = document.getElementById('leafBackImg');
     const bookPages = document.getElementById('bookPages');
     const bookWrap = document.getElementById('bookWrap');
+    const btnMode = document.getElementById('btnMode');
 
     function setTheme(bg, casing, isDark = false) {
       document.documentElement.style.setProperty('--bg', bg);
@@ -426,6 +499,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
         bookPages.classList.add('single-mode');
         leftBox.style.display = 'none';
         rightBox.style.width = '100%';
+        rightImg.style.visibility = 'visible';
         rightImg.src = pages[currentIndex] || '';
         rightNum.innerText = (currentIndex + 1) + ' / ' + totalPages;
         rightSpine.style.display = 'none';
@@ -436,6 +510,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
         if (currentIndex === 0) {
           leftBox.style.display = 'none';
           rightBox.style.width = '100%';
+          rightImg.style.visibility = 'visible';
           rightImg.src = pages[0] || '';
           rightNum.innerText = '1';
           rightSpine.style.display = 'none';
@@ -445,10 +520,25 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
           rightBox.style.width = '50%';
           const leftIdx = currentIndex % 2 === 1 ? currentIndex : currentIndex - 1;
           const rightIdx = leftIdx + 1;
-          leftImg.src = pages[leftIdx] || '';
-          leftNum.innerText = leftIdx + 1;
-          rightImg.src = pages[rightIdx] || '';
-          rightNum.innerText = rightIdx < totalPages ? (rightIdx + 1) : '';
+
+          if (leftIdx < totalPages) {
+            leftImg.style.visibility = 'visible';
+            leftImg.src = pages[leftIdx] || '';
+            leftNum.innerText = leftIdx + 1;
+          } else {
+            leftImg.style.visibility = 'hidden';
+            leftNum.innerText = '';
+          }
+
+          if (rightIdx < totalPages) {
+            rightImg.style.visibility = 'visible';
+            rightImg.src = pages[rightIdx] || '';
+            rightNum.innerText = rightIdx + 1;
+          } else {
+            rightImg.style.visibility = 'hidden';
+            rightNum.innerText = '';
+          }
+
           pageInput.value = leftIdx + 1;
         }
       }
@@ -479,6 +569,11 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
       turningLeaf.style.display = 'block';
       leafFrontImg.src = rightImg.src;
       leafBackImg.src = pages[nextIdx] || '';
+
+      // Prepare upcoming page under the turning leaf so it reveals naturally
+      if (viewMode === 'dual' && nextIdx + 1 < totalPages) {
+        rightImg.src = pages[nextIdx + 1] || '';
+      }
 
       let start = null;
       const duration = 460;
@@ -539,40 +634,91 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
     rightBox.addEventListener('click', flipNext);
     leftBox.addEventListener('click', flipPrev);
 
+    // Keyboard controls
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); flipNext(); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); flipPrev(); }
+      if (e.target.tagName === 'INPUT') return;
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault(); flipNext();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault(); flipPrev();
+      } else if (e.key === 'Home') {
+        e.preventDefault(); currentIndex = 0; renderSpread();
+      } else if (e.key === 'End') {
+        e.preventDefault(); currentIndex = totalPages - 1; renderSpread();
+      }
     });
 
+    // Touch Swipe gestures for iPad & Mobile
+    let touchStartX = 0;
+    let touchStartY = 0;
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchend', (e) => {
+      if (e.changedTouches.length === 1) {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+          if (dx < 0) flipNext();
+          else flipPrev();
+        }
+      }
+    }, { passive: true });
+
+    // Sound toggle
     document.getElementById('btnSound').addEventListener('click', function() {
       isSoundOn = !isSoundOn;
       this.innerText = isSoundOn ? '🔊 Âm thanh: Bật' : '🔇 Âm thanh: Tắt';
     });
 
-    document.getElementById('btnMode').addEventListener('click', function() {
+    // Dual / Single view mode toggle
+    btnMode.innerText = viewMode === 'dual' ? '📖 2 Trang' : '📱 1 Trang';
+    btnMode.addEventListener('click', function() {
       viewMode = viewMode === 'dual' ? 'single' : 'dual';
       this.innerText = viewMode === 'dual' ? '📖 2 Trang' : '📱 1 Trang';
       renderSpread();
     });
 
-    document.getElementById('btnZoomIn').addEventListener('click', () => {
-      zoomLevel = Math.min(2.0, zoomLevel + 0.2);
+    // Zoom controls
+    function applyZoom() {
       bookWrap.style.transform = 'scale(' + zoomLevel + ')';
+    }
+    document.getElementById('btnZoomIn').addEventListener('click', () => {
+      zoomLevel = Math.min(2.2, Math.round((zoomLevel + 0.2) * 10) / 10);
+      applyZoom();
     });
     document.getElementById('btnZoomOut').addEventListener('click', () => {
-      zoomLevel = Math.max(0.7, zoomLevel - 0.2);
-      bookWrap.style.transform = 'scale(' + zoomLevel + ')';
+      zoomLevel = Math.max(0.6, Math.round((zoomLevel - 0.2) * 10) / 10);
+      applyZoom();
     });
     document.getElementById('btnZoomReset').addEventListener('click', () => {
       zoomLevel = 1.0;
-      bookWrap.style.transform = 'scale(1.0)';
+      applyZoom();
     });
 
+    // Fullscreen toggle
     document.getElementById('btnFullscreen').addEventListener('click', () => {
-      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-      else document.exitFullscreen();
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
     });
 
+    // Direct Page number input
+    pageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = parseInt(e.target.value, 10);
+        if (!isNaN(val) && val >= 1 && val <= totalPages) {
+          currentIndex = val - 1;
+          renderSpread();
+        }
+      }
+    });
     pageInput.addEventListener('change', (e) => {
       const val = parseInt(e.target.value, 10);
       if (!isNaN(val) && val >= 1 && val <= totalPages) {
@@ -581,6 +727,17 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (KHÔNG CẦN INTERNET):
       }
     });
 
+    // Auto-adapt mode on resize
+    window.addEventListener('resize', () => {
+      const shouldBeSingle = window.innerWidth < 768;
+      if (shouldBeSingle && viewMode !== 'single') {
+        viewMode = 'single';
+        btnMode.innerText = '📱 1 Trang';
+        renderSpread();
+      }
+    });
+
+    // Initial render
     renderSpread();
   </script>
 </body>

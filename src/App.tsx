@@ -87,6 +87,8 @@ export default function App() {
   } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfDocRef = useRef<any>(null);
+  const totalDocPagesRef = useRef<number>(0);
 
   // Show auto-dismissing toast
   const showToast = useCallback(
@@ -222,9 +224,29 @@ export default function App() {
     setIsExportingZip(true);
     setZipProgress({ step: 'Khởi tạo gói ZIP sách lật...', percent: 5 });
     try {
+      let exportablePages = [...pages];
+      const targetTotal = totalDocPagesRef.current;
+
+      // If document has more pages that haven't finished background rendering, render them now!
+      if (pdfDocRef.current && targetTotal > exportablePages.length) {
+        setZipProgress({
+          step: `Đang kết xuất đầy đủ ${targetTotal} trang sách trước khi đóng gói...`,
+          percent: 10,
+        });
+        for (let p = exportablePages.length + 1; p <= targetTotal; p++) {
+          setZipProgress({
+            step: `Đang chuẩn bị trang ${p} / ${targetTotal}...`,
+            percent: Math.round(10 + (p / targetTotal) * 20),
+          });
+          const pageData = await renderPdfPage(pdfDocRef.current, p, 900);
+          exportablePages.push(pageData);
+        }
+        setPages(exportablePages);
+      }
+
       showToast('Đang đóng gói ZIP sách lật 3D...', 'info');
       await exportFlipbookZipPackage(
-        pages,
+        exportablePages,
         bookTitle || 'Ebook_Lat_Trang',
         uploadedFile,
         theme.primary,
@@ -313,6 +335,8 @@ export default function App() {
       }
 
       // Save uploaded file reference for download!
+      pdfDocRef.current = pdfDoc;
+      totalDocPagesRef.current = numPages;
       setUploadedFile(file);
       setPages([...initialPages]);
       setCurrentPageIndex(0);
@@ -358,6 +382,8 @@ export default function App() {
         const samplePages = generateSampleBookPages(bookId);
         const meta = SAMPLE_BOOKS.find((b) => b.id === bookId);
 
+        pdfDocRef.current = null;
+        totalDocPagesRef.current = samplePages.length;
         setUploadedFile(null); // not uploaded file
         setPages(samplePages);
         setCurrentPageIndex(0);
@@ -399,6 +425,9 @@ export default function App() {
   };
 
   const handleReturnToUpload = () => {
+    pdfDocRef.current = null;
+    totalDocPagesRef.current = 0;
+    setUploadedFile(null);
     setPages([]);
     setBookTitle('');
     setErrorMessage(null);
