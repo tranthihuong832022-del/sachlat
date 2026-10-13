@@ -12,6 +12,7 @@ import {
   Upload,
   ArrowLeft,
   Download,
+  Share2,
   Info,
   CheckCircle,
   AlertTriangle,
@@ -35,11 +36,13 @@ import {
 import { downloadPagesAsPdf } from './utils/samplePdfDownload';
 import { exportStandaloneHtmlFlipbook } from './utils/exportStandaloneHtml';
 import { exportFlipbookZipPackage, ZipExportProgress } from './utils/exportZipPackage';
+import { saveBookToStorage, getBookFromStorage } from './utils/bookStorage';
 import { UploadArea } from './components/UploadArea';
 import { FlipBookViewer } from './components/FlipBookViewer';
 import { ReadingToolbar } from './components/ReadingToolbar';
 import { ThemeModal } from './components/ThemeModal';
 import { PageThumbnailsDrawer } from './components/PageThumbnailsDrawer';
+import { ShareLinkModal } from './components/ShareLinkModal';
 
 export default function App() {
   // Theme state
@@ -51,6 +54,9 @@ export default function App() {
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
   const [bookTitle, setBookTitle] = useState<string>('');
   const [isSampleBook, setIsSampleBook] = useState<boolean>(false);
+  const [currentBookId, setCurrentBookId] = useState<string | null>(null);
+  const [sampleBookId, setSampleBookId] = useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingProgress, setLoadingProgress] = useState<{
@@ -277,7 +283,7 @@ export default function App() {
   };
 
   // Process uploaded PDF file
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (file: File, existingBookId?: string) => {
     setErrorMessage(null);
 
     // 1. Validate file format and size
@@ -334,7 +340,8 @@ export default function App() {
         initialPages.push(rendered);
       }
 
-      // Save uploaded file reference for download!
+      // Save uploaded file reference for download & link sharing!
+      const bookId = existingBookId || `book_${Date.now()}`;
       pdfDocRef.current = pdfDoc;
       totalDocPagesRef.current = numPages;
       setUploadedFile(file);
@@ -342,8 +349,21 @@ export default function App() {
       setCurrentPageIndex(0);
       setBookTitle(file.name.replace(/\.[^/.]+$/, ''));
       setIsSampleBook(false);
+      setCurrentBookId(bookId);
+      setSampleBookId(null);
       setIsLoading(false);
       showToast(`Đã mở "${file.name}" (${numPages} trang)!`, 'success');
+
+      // Save locally to IndexedDB so direct URL link works
+      saveBookToStorage(bookId, file.name.replace(/\.[^/.]+$/, ''), file, file.name, numPages);
+
+      // Sync URL parameter silently
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('id', bookId);
+        url.searchParams.delete('sample');
+        window.history.replaceState(null, '', url.toString());
+      } catch {}
 
       // Continue rendering remaining pages in background if more than initialBatchCount
       if (numPages > initialBatchCount) {
@@ -389,8 +409,18 @@ export default function App() {
         setCurrentPageIndex(0);
         setBookTitle(meta?.title || 'Sách Mẫu Giáo Dục');
         setIsSampleBook(true);
+        setSampleBookId(bookId);
+        setCurrentBookId(null);
         setIsLoading(false);
         showToast(`Đã mở "${meta?.title}" (${samplePages.length} trang)`, 'success');
+
+        // Sync URL parameter silently
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set('sample', bookId);
+          url.searchParams.delete('id');
+          window.history.replaceState(null, '', url.toString());
+        } catch {}
       } catch (err) {
         console.error('Error generating sample book:', err);
         setIsLoading(false);
@@ -433,7 +463,59 @@ export default function App() {
     setErrorMessage(null);
     setCurrentPageIndex(0);
     setIsAutoFlipping(false);
+    setCurrentBookId(null);
+    setSampleBookId(null);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('id');
+      url.searchParams.delete('sample');
+      url.searchParams.delete('page');
+      window.history.replaceState(null, '', url.toString());
+    } catch {}
   };
+
+  // Restore book from URL query parameters (?sample=..., ?id=..., ?page=...)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const sampleParam = params.get('sample');
+    const idParam = params.get('id');
+    const pageParam = params.get('page');
+
+    if (sampleParam) {
+      handleSelectSampleBook(sampleParam);
+      if (pageParam) {
+        const pageNum = parseInt(pageParam, 10);
+        if (!isNaN(pageNum) && pageNum > 0) {
+          setTimeout(() => {
+            setCurrentPageIndex(pageNum - 1);
+            bookFlipRef.current?.goToPage(pageNum - 1);
+          }, 400);
+        }
+      }
+    } else if (idParam) {
+      (async () => {
+        try {
+          const stored = await getBookFromStorage(idParam);
+          if (stored) {
+            const file = new File([stored.fileBlob], stored.fileName, { type: 'application/pdf' });
+            await handleFileSelect(file, idParam);
+            if (pageParam) {
+              const pageNum = parseInt(pageParam, 10);
+              if (!isNaN(pageNum) && pageNum > 0) {
+                setTimeout(() => {
+                  setCurrentPageIndex(pageNum - 1);
+                  bookFlipRef.current?.goToPage(pageNum - 1);
+                }, 600);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Could not restore book from IndexedDB:', e);
+        }
+      })();
+    }
+  }, []);
 
   const isReading = pages.length > 0;
 
@@ -526,16 +608,16 @@ export default function App() {
 
           {/* Zone 3: Primary Action & Quick Settings */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Download CTA in Header when reading */}
+            {/* Share / Vercel App Link CTA in Header when reading */}
             {isReading && (
               <button
-                onClick={handleDownloadPdf}
+                onClick={() => setIsShareModalOpen(true)}
                 className="p-2 sm:px-3 sm:py-2 rounded-lg border hover:bg-black/5 transition-colors flex items-center gap-1.5 text-xs font-bold cursor-pointer text-emerald-700 dark:text-emerald-400"
                 style={{ borderColor: theme.surfaceBorder }}
-                title="Tải cuốn sách PDF này về máy tính"
+                title="Lấy link sách lật trên Vercel hoặc tải file lối tắt (.url)"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Tải về</span>
+                <Share2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Link App Vercel</span>
               </button>
             )}
 
@@ -604,6 +686,7 @@ export default function App() {
               onOpenThemeModal={() => setIsThemeModalOpen(true)}
               onOpenFileSelector={handleOpenFileSelector}
               onOpenThumbnails={() => setIsThumbnailsOpen(true)}
+              onOpenShareModal={() => setIsShareModalOpen(true)}
               onDownloadPdf={handleDownloadPdf}
               onDownloadZipFlipbook={handleDownloadZipFlipbook}
               onDownloadCurrentPage={handleDownloadCurrentPageImage}
@@ -680,6 +763,20 @@ export default function App() {
           bookFlipRef.current?.goToPage(index);
         }}
         theme={theme}
+      />
+
+      {/* Share & Vercel App Link Modal */}
+      <ShareLinkModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        theme={theme}
+        bookTitle={bookTitle}
+        bookId={currentBookId}
+        sampleBookId={sampleBookId}
+        currentPageIndex={currentPageIndex}
+        onDownloadZip={handleDownloadZipFlipbook}
+        onDownloadPdf={handleDownloadPdf}
+        isExportingZip={isExportingZip}
       />
 
       {/* ZIP Packaging Progress Modal / Banner */}

@@ -21,6 +21,8 @@ import {
   Bookmark,
   Sparkles,
   Loader2,
+  Share2,
+  Globe,
 } from 'lucide-react';
 import { ThemeConfig } from '../utils/theme';
 
@@ -43,6 +45,7 @@ interface ReadingToolbarProps {
   onOpenThemeModal: () => void;
   onOpenFileSelector: () => void;
   onOpenThumbnails: () => void;
+  onOpenShareModal: () => void;
   onDownloadPdf: () => void; // "Tải PDF gốc"
   onDownloadZipFlipbook: () => void; // "Tải sách lật về" (gói ZIP)
   onDownloadCurrentPage: () => void;
@@ -74,6 +77,7 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
   onOpenThemeModal,
   onOpenFileSelector,
   onOpenThumbnails,
+  onOpenShareModal,
   onDownloadPdf,
   onDownloadZipFlipbook,
   onDownloadCurrentPage,
@@ -154,6 +158,20 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
           >
             <LayoutGrid className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Mục lục ({totalPages})</span>
+          </button>
+
+          {/* BUTTON 0: "Link App Vercel" (Chia sẻ trực tuyến, QR & Tải file Lối tắt .url) */}
+          <button
+            onClick={onOpenShareModal}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold border transition-all active:scale-95 hover:bg-black/5 cursor-pointer shrink-0 shadow-2xs"
+            style={{
+              borderColor: theme.primary,
+              color: theme.primary,
+            }}
+            title="Lấy link đọc sách trực tiếp trên trang Vercel, quét mã QR hoặc tải tệp lối tắt (.url)"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Link App Vercel</span>
           </button>
 
           {/* BUTTON 1: "Tải sách lật về" (Gói ZIP mở offline có index.html & PDF) */}

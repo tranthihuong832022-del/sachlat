@@ -102,11 +102,17 @@ Sau khi triển khai thành công lên Vercel, hãy mở liên kết web và ki�
    - Kéo thả hoặc tải một file PDF từ máy tính của bạn vào app.
    - Kiểm tra các trang sách hiển thị rõ ràng và hiệu ứng lật trang 3D hoạt động mượt mà.
    - Thử nghiệm trên cả máy tính và điện thoại thông minh.
-2. **Thử nghiệm đọc sách mẫu**:
+2. **Thử nghiệm chức năng “Link App Vercel”**:
+   - Bấm nút **“Link App Vercel”** trên thanh công cụ hoặc đầu trang.
+   - Hộp thoại chia sẻ sẽ mở ra với đường dẫn web app trực tiếp.
+   - Bấm **“Sao chép”** để gửi link cho bạn bè, học sinh, phụ huynh đọc ngay trên web Vercel mà không cần tải hay cài đặt bất kỳ phần mềm nào.
+   - Quét mã **QR Code** bằng camera điện thoại để mở ngay sách lật trên di động.
+   - Bấm **“Tải .url”**: Tải file lối tắt Windows (1 KB), nhấp đúp là tự động mở trình duyệt tới sách lật trên Vercel.
+3. **Thử nghiệm đọc sách mẫu**:
    - Nhấp vào nút đọc thử sách mẫu có sẵn để trải nghiệm ngay.
-3. **Thử nghiệm nút “Tải PDF gốc”**:
+4. **Thử nghiệm nút “Tải PDF gốc”**:
    - Bấm nút “Tải PDF gốc” trên thanh công cụ để tải lại file PDF ban đầu.
-4. **Thử nghiệm nút “Tải sách lật về” (Gói ZIP)**:
+5. **Thử nghiệm nút “Tải sách lật về” (Gói ZIP)**:
    - Bấm nút “Tải sách lật về”, thanh tiến trình nén file ZIP sẽ chạy từ 0% đến 100%.
    - Trình duyệt sẽ tải về file `[Ten_Sach]_Sach_Lat_3D.zip`.
    - **Giải nén file ZIP** trên máy tính:
