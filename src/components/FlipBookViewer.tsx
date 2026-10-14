@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RenderedPage } from '../utils/pdfLoader';
 import { ThemeConfig } from '../utils/theme';
 import { audioEngine } from '../utils/audio';
-import { ChevronLeft, ChevronRight, BookOpen, Smartphone } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookOpen, Smartphone, FileText, Monitor } from 'lucide-react';
+import { BookOrientation } from './UploadArea';
 
 interface FlipBookViewerProps {
   pages: RenderedPage[];
@@ -11,6 +12,8 @@ interface FlipBookViewerProps {
   onPageChange: (newPageIndex: number, totalPages: number) => void;
   zoom: number;
   bookRef?: React.MutableRefObject<any>;
+  bookOrientation?: BookOrientation;
+  onChangeBookOrientation?: (orientation: BookOrientation) => void;
 }
 
 export const FlipBookViewer: React.FC<FlipBookViewerProps> = ({
@@ -20,6 +23,8 @@ export const FlipBookViewer: React.FC<FlipBookViewerProps> = ({
   onPageChange,
   zoom,
   bookRef,
+  bookOrientation = 'auto',
+  onChangeBookOrientation,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -50,6 +55,26 @@ export const FlipBookViewer: React.FC<FlipBookViewerProps> = ({
     window.addEventListener('resize', checkScreen);
     return () => window.removeEventListener('resize', checkScreen);
   }, []);
+
+  // Calculate natural and effective aspect ratios
+  const firstPage = pages[0];
+  const naturalRatio = firstPage?.aspectRatio || 0.707;
+  const isNaturalLandscape = naturalRatio >= 1.05;
+
+  const isLandscape =
+    bookOrientation === 'landscape'
+      ? true
+      : bookOrientation === 'portrait'
+      ? false
+      : isNaturalLandscape;
+
+  // Single page aspect ratio
+  const singleRatio = isLandscape
+    ? (naturalRatio >= 1.05 ? naturalRatio : 1.414)
+    : (naturalRatio < 1.05 ? naturalRatio : 0.707);
+
+  // Dual spread aspect ratio
+  const dualRatio = currentPageIndex === 0 ? singleRatio : singleRatio * 2;
 
   // Compute pages in current view
   // In dual mode:
@@ -362,12 +387,12 @@ export const FlipBookViewer: React.FC<FlipBookViewerProps> = ({
         <ChevronRight className="w-6 h-6" />
       </button>
 
-      {/* View Mode Switcher Button (Desktop: 2 Trang vs 1 Trang) */}
-      <div className="absolute top-2 right-4 z-20 hidden md:flex items-center gap-1 bg-black/10 backdrop-blur-md p-1 rounded-xl border border-white/20">
+      {/* View Mode & Orientation Switcher Button (Desktop: 2 Trang vs 1 Trang & Khổ Đứng / Ngang) */}
+      <div className="absolute top-2 right-4 z-20 hidden md:flex items-center gap-1 bg-black/15 backdrop-blur-md p-1 rounded-xl border border-white/20 shadow-sm">
         <button
           onClick={() => setViewMode('dual')}
           className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-            viewMode === 'dual' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-700 hover:text-stone-900'
+            viewMode === 'dual' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-700 dark:text-stone-200 hover:text-stone-900'
           }`}
           title="Chế độ sách mở 2 trang"
         >
@@ -377,13 +402,41 @@ export const FlipBookViewer: React.FC<FlipBookViewerProps> = ({
         <button
           onClick={() => setViewMode('single')}
           className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-            viewMode === 'single' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-700 hover:text-stone-900'
+            viewMode === 'single' ? 'bg-white shadow-xs text-stone-900' : 'text-stone-700 dark:text-stone-200 hover:text-stone-900'
           }`}
           title="Chế độ 1 trang to rõ nét"
         >
           <Smartphone className="w-3.5 h-3.5" />
           <span>1 trang</span>
         </button>
+
+        {/* Orientation Toggle Button */}
+        {onChangeBookOrientation && (
+          <>
+            <div className="w-[1px] h-4 bg-white/30 mx-0.5" />
+            <button
+              onClick={() => onChangeBookOrientation(isLandscape ? 'portrait' : 'landscape')}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer bg-white/80 hover:bg-white text-stone-900 shadow-2xs"
+              title={
+                isLandscape
+                  ? 'Đang hiển thị Khổ ngang (Nhấp để đổi sang Khổ đứng)'
+                  : 'Đang hiển thị Khổ đứng (Nhấp để đổi sang Khổ ngang)'
+              }
+            >
+              {isLandscape ? (
+                <>
+                  <Monitor className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Khổ ngang</span>
+                </>
+              ) : (
+                <>
+                  <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Khổ đứng</span>
+                </>
+              )}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Main 3D Book Stage (With Zoom and Pan) */}
@@ -446,8 +499,8 @@ export const FlipBookViewer: React.FC<FlipBookViewerProps> = ({
           <div
             className="relative flex items-center justify-center bg-white rounded-md overflow-hidden"
             style={{
-              maxHeight: 'calc(100vh - 200px)',
-              maxWidth: 'calc(100vw - 80px)',
+              maxHeight: 'calc(100vh - 180px)',
+              maxWidth: 'calc(100vw - 60px)',
             }}
           >
             {/* DUAL-PAGE SPREAD VIEW */}
@@ -455,8 +508,8 @@ export const FlipBookViewer: React.FC<FlipBookViewerProps> = ({
               <div
                 className="relative flex items-stretch bg-stone-100 shadow-inner"
                 style={{
-                  height: 'clamp(380px, 72vh, 820px)',
-                  aspectRatio: currentPageIndex === 0 ? '1 / 1.414' : '2 / 1.414',
+                  height: isLandscape ? 'clamp(280px, 58vh, 660px)' : 'clamp(380px, 72vh, 820px)',
+                  aspectRatio: `${dualRatio}`,
                 }}
               >
                 {/* 1. LEFT PAGE (or Empty inside cover if cover is on right) */}
@@ -600,8 +653,8 @@ export const FlipBookViewer: React.FC<FlipBookViewerProps> = ({
               <div
                 className="relative bg-white shadow-md overflow-hidden flex items-center justify-center cursor-pointer"
                 style={{
-                  height: 'clamp(380px, 75vh, 850px)',
-                  aspectRatio: '1 / 1.414',
+                  height: isLandscape ? 'clamp(320px, 72vh, 800px)' : 'clamp(380px, 75vh, 850px)',
+                  aspectRatio: `${singleRatio}`,
                 }}
                 onClick={handleNext}
               >

@@ -11,9 +11,14 @@ import {
   BookMarked,
   Eye,
   ArrowRight,
+  FileText,
+  Monitor,
+  Check,
 } from 'lucide-react';
 import { ThemeConfig } from '../utils/theme';
 import { SAMPLE_BOOKS, SampleBookMeta } from '../utils/sampleBook';
+
+export type BookOrientation = 'auto' | 'portrait' | 'landscape';
 
 interface UploadAreaProps {
   theme: ThemeConfig;
@@ -24,6 +29,8 @@ interface UploadAreaProps {
   loadingProgress: { step: string; percent: number; current?: number; total?: number };
   errorMessage: string | null;
   onClearError: () => void;
+  bookOrientation: BookOrientation;
+  onChangeBookOrientation: (orientation: BookOrientation) => void;
 }
 
 export const UploadArea: React.FC<UploadAreaProps> = ({
@@ -35,6 +42,8 @@ export const UploadArea: React.FC<UploadAreaProps> = ({
   loadingProgress,
   errorMessage,
   onClearError,
+  bookOrientation,
+  onChangeBookOrientation,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,6 +138,193 @@ export const UploadArea: React.FC<UploadAreaProps> = ({
           </button>
         </div>
       )}
+
+      {/* BOOK ORIENTATION SELECTION: Trang đứng (Portrait) vs Trang ngang (Landscape) vs Tự động */}
+      <div className="w-full mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-3.5">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold tracking-tight" style={{ color: theme.text }}>
+              Chọn định dạng trang sách PDF:
+            </span>
+            <span
+              className="text-xs px-2.5 py-0.5 rounded-full font-semibold border"
+              style={{
+                backgroundColor: `${theme.primary}12`,
+                color: theme.primary,
+                borderColor: `${theme.primary}30`,
+              }}
+            >
+              {bookOrientation === 'portrait'
+                ? 'Khổ đứng (Portrait)'
+                : bookOrientation === 'landscape'
+                ? 'Khổ ngang (Landscape)'
+                : 'Tự động nhận diện (Khuyên dùng)'}
+            </span>
+          </div>
+          <span className="text-xs font-medium opacity-75" style={{ color: theme.mutedText }}>
+            Hỗ trợ đầy đủ cả file PDF trang đứng (A4/sách) và trang ngang (Slide/bài giảng)
+          </span>
+        </div>
+
+        {/* 3 Interactive Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          {/* Option 1: Trang đứng (Portrait) */}
+          <button
+            type="button"
+            onClick={() => onChangeBookOrientation('portrait')}
+            className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer relative flex flex-col justify-between ${
+              bookOrientation === 'portrait'
+                ? 'ring-2 shadow-md'
+                : 'hover:shadow-sm hover:border-stone-400 opacity-90 hover:opacity-100'
+            }`}
+            style={{
+              backgroundColor: theme.surface,
+              borderColor: bookOrientation === 'portrait' ? theme.primary : theme.surfaceBorder,
+              boxShadow: bookOrientation === 'portrait' ? `0 0 0 2px ${theme.primary}40` : undefined,
+            }}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  backgroundColor: `${theme.primary}15`,
+                  color: theme.primary,
+                }}
+              >
+                {/* Visual Portrait Miniature */}
+                <div className="w-4 h-6 border-2 border-current rounded-[2px] bg-white/40 flex items-center justify-center">
+                  <div className="w-2.5 h-0.5 bg-current opacity-60" />
+                </div>
+              </div>
+              {bookOrientation === 'portrait' && (
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-white"
+                  style={{ backgroundColor: theme.primary }}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-sm font-bold" style={{ color: theme.text }}>
+                  Trang đứng (Portrait)
+                </span>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-sm bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300">
+                  Chuẩn A4
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: theme.mutedText }}>
+                Tối ưu cho sách giáo khoa, truyện tranh, tài liệu và văn bản dọc tiêu chuẩn.
+              </p>
+            </div>
+          </button>
+
+          {/* Option 2: Trang ngang (Landscape) */}
+          <button
+            type="button"
+            onClick={() => onChangeBookOrientation('landscape')}
+            className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer relative flex flex-col justify-between ${
+              bookOrientation === 'landscape'
+                ? 'ring-2 shadow-md'
+                : 'hover:shadow-sm hover:border-stone-400 opacity-90 hover:opacity-100'
+            }`}
+            style={{
+              backgroundColor: theme.surface,
+              borderColor: bookOrientation === 'landscape' ? theme.primary : theme.surfaceBorder,
+              boxShadow: bookOrientation === 'landscape' ? `0 0 0 2px ${theme.primary}40` : undefined,
+            }}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  backgroundColor: `${theme.primary}15`,
+                  color: theme.primary,
+                }}
+              >
+                {/* Visual Landscape Miniature */}
+                <div className="w-6 h-4 border-2 border-current rounded-[2px] bg-white/40 flex items-center justify-center">
+                  <div className="w-3.5 h-0.5 bg-current opacity-60" />
+                </div>
+              </div>
+              {bookOrientation === 'landscape' && (
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-white"
+                  style={{ backgroundColor: theme.primary }}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-sm font-bold" style={{ color: theme.text }}>
+                  Trang ngang (Landscape)
+                </span>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-sm bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                  Slide / 16:9
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: theme.mutedText }}>
+                Tối ưu cho slide bài giảng điện tử, tài liệu thuyết trình PowerPoint xuất PDF, album ảnh ngang.
+              </p>
+            </div>
+          </button>
+
+          {/* Option 3: Tự động nhận diện (Auto-detect) */}
+          <button
+            type="button"
+            onClick={() => onChangeBookOrientation('auto')}
+            className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer relative flex flex-col justify-between ${
+              bookOrientation === 'auto'
+                ? 'ring-2 shadow-md'
+                : 'hover:shadow-sm hover:border-stone-400 opacity-90 hover:opacity-100'
+            }`}
+            style={{
+              backgroundColor: theme.surface,
+              borderColor: bookOrientation === 'auto' ? theme.primary : theme.surfaceBorder,
+              boxShadow: bookOrientation === 'auto' ? `0 0 0 2px ${theme.primary}40` : undefined,
+            }}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  backgroundColor: `${theme.primary}15`,
+                  color: theme.primary,
+                }}
+              >
+                <Sparkles className="w-5 h-5" />
+              </div>
+              {bookOrientation === 'auto' && (
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-white"
+                  style={{ backgroundColor: theme.primary }}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-sm font-bold" style={{ color: theme.text }}>
+                  Tự động phát hiện (Auto)
+                </span>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-sm bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                  Khuyên dùng
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: theme.mutedText }}>
+                Hệ thống tự động quét tỉ lệ trang đầu tiên của file PDF để hiển thị đúng khổ đứng hoặc ngang.
+              </p>
+            </div>
+          </button>
+        </div>
+      </div>
 
       {/* Main 2-Column Split: Upload Zone + Book Preview Illustration */}
       <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch mb-14">
@@ -348,7 +544,7 @@ export const UploadArea: React.FC<UploadAreaProps> = ({
         </div>
 
         {/* Sample books cards grid with rich cover depth */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {SAMPLE_BOOKS.map((book: SampleBookMeta) => (
             <div
               key={book.id}

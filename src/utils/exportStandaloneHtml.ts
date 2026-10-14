@@ -9,11 +9,25 @@ import { RenderedPage } from './pdfLoader';
 export function exportStandaloneHtmlFlipbook(
   pages: RenderedPage[],
   title: string = 'Ebook Lật Trang',
-  themeColor: string = '#0D9488'
+  themeColor: string = '#0D9488',
+  bookOrientation: 'auto' | 'portrait' | 'landscape' = 'auto'
 ) {
   const cleanTitle = title.replace(/[<>&"]/g, '');
   const pagesJson = JSON.stringify(pages.map((p) => p.dataUrl));
   const pagesTextJson = JSON.stringify(pages.map((p) => p.textContent || ''));
+
+  const firstRatio = pages[0]?.aspectRatio || 0.707;
+  const isLandscape =
+    bookOrientation === 'landscape'
+      ? true
+      : bookOrientation === 'portrait'
+      ? false
+      : firstRatio >= 1.05;
+
+  const singleRatio = isLandscape
+    ? (firstRatio >= 1.05 ? Number(firstRatio.toFixed(3)) : 1.414)
+    : (firstRatio < 1.05 ? Number(firstRatio.toFixed(3)) : 0.707);
+  const dualRatio = Number((singleRatio * 2).toFixed(3));
 
   const htmlContent = `<!DOCTYPE html>
 <html lang="vi">
@@ -118,13 +132,14 @@ export function exportStandaloneHtmlFlipbook(
       background: #FFFFFF;
       border-radius: 4px;
       overflow: hidden;
-      height: min(74vh, 760px);
-      aspect-ratio: 2 / 1.414;
+      height: ${isLandscape ? 'min(60vh, 660px)' : 'min(74vh, 760px)'};
+      aspect-ratio: ${dualRatio};
       box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
       position: relative;
     }
     .single-mode .book-pages {
-      aspect-ratio: 1 / 1.414;
+      height: ${isLandscape ? 'min(74vh, 760px)' : 'min(74vh, 760px)'};
+      aspect-ratio: ${singleRatio};
     }
     .page-box {
       width: 50%;
@@ -254,6 +269,7 @@ export function exportStandaloneHtmlFlipbook(
       <button class="btn" id="btnSound">🔊 Âm lật: Bật</button>
       <button class="btn" id="btnSpeech" title="Đọc nội dung trang">🎧 Đọc trang</button>
       <button class="btn" id="btnAutoSpeech" title="Tự động đọc nội dung khi lật trang">⚡ Đọc khi lật: Tắt</button>
+      <button class="btn" id="btnOrient" title="Chuyển đổi khổ đứng / khổ ngang">${isLandscape ? '🖥️ Khổ ngang' : '📄 Khổ đứng'}</button>
       <button class="btn" id="btnMode">📖 2 Trang</button>
       <button class="btn" id="btnZoomOut">🔍-</button>
       <button class="btn" id="btnZoomReset">100%</button>
@@ -565,9 +581,38 @@ export function exportStandaloneHtmlFlipbook(
       });
     }
 
+    const btnOrient = document.getElementById('btnOrient');
+    let currentIsLandscape = ${isLandscape};
+    if (btnOrient) {
+      btnOrient.addEventListener('click', function() {
+        currentIsLandscape = !currentIsLandscape;
+        this.innerText = currentIsLandscape ? '🖥️ Khổ ngang' : '📄 Khổ đứng';
+        const pagesEl = document.getElementById('bookPages');
+        if (pagesEl) {
+          if (currentIsLandscape) {
+            pagesEl.style.aspectRatio = viewMode === 'single' ? '${singleRatio}' : '${dualRatio}';
+            pagesEl.style.height = viewMode === 'single' ? 'min(74vh, 760px)' : 'min(60vh, 660px)';
+          } else {
+            pagesEl.style.aspectRatio = viewMode === 'single' ? '1 / 1.414' : '2 / 1.414';
+            pagesEl.style.height = 'min(74vh, 760px)';
+          }
+        }
+      });
+    }
+
     document.getElementById('btnMode').addEventListener('click', function() {
       viewMode = viewMode === 'dual' ? 'single' : 'dual';
       this.innerText = viewMode === 'dual' ? '📖 2 Trang' : '📱 1 Trang';
+      const pagesEl = document.getElementById('bookPages');
+      if (pagesEl) {
+        if (currentIsLandscape) {
+          pagesEl.style.aspectRatio = viewMode === 'single' ? '${singleRatio}' : '${dualRatio}';
+          pagesEl.style.height = viewMode === 'single' ? 'min(74vh, 760px)' : 'min(60vh, 660px)';
+        } else {
+          pagesEl.style.aspectRatio = viewMode === 'single' ? '1 / 1.414' : '2 / 1.414';
+          pagesEl.style.height = 'min(74vh, 760px)';
+        }
+      }
       renderSpread();
     });
 

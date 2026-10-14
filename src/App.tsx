@@ -37,7 +37,7 @@ import { downloadPagesAsPdf } from './utils/samplePdfDownload';
 import { exportStandaloneHtmlFlipbook } from './utils/exportStandaloneHtml';
 import { exportFlipbookZipPackage, ZipExportProgress } from './utils/exportZipPackage';
 import { saveBookToStorage, getBookFromStorage } from './utils/bookStorage';
-import { UploadArea } from './components/UploadArea';
+import { UploadArea, BookOrientation } from './components/UploadArea';
 import { FlipBookViewer } from './components/FlipBookViewer';
 import { ReadingToolbar } from './components/ReadingToolbar';
 import { ThemeModal } from './components/ThemeModal';
@@ -60,6 +60,9 @@ export default function App() {
   const [sampleBookId, setSampleBookId] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  // Book Orientation State: 'auto' | 'portrait' | 'landscape'
+  const [bookOrientation, setBookOrientation] = useState<BookOrientation>('auto');
 
   // Speech Narration (TTS) state
   const [speechState, setSpeechState] = useState<SpeechState>(() => speechEngine.getState());
@@ -335,7 +338,8 @@ export default function App() {
         bookTitle || 'Ebook_Lat_Trang',
         uploadedFile,
         theme.primary,
-        (progress) => setZipProgress(progress)
+        (progress) => setZipProgress(progress),
+        bookOrientation
       );
       showToast('Đã tải gói ZIP sách lật 3D thành công! Giải nén và mở index.html để đọc ngoại tuyến.', 'success');
     } catch (err: any) {
@@ -353,7 +357,7 @@ export default function App() {
     try {
       const cleanTitle = bookTitle || 'Ebook_Lat_Trang';
       showToast('Đang đóng gói file Ebook Lật Trang 3D tự chạy...', 'info');
-      exportStandaloneHtmlFlipbook(pages, cleanTitle, theme.primary);
+      exportStandaloneHtmlFlipbook(pages, cleanTitle, theme.primary, bookOrientation);
       showToast('Đã tải file Ebook 3D (.html)! Mở bằng trình duyệt để lật trang offline.', 'success');
     } catch (err) {
       console.error('Failed to export standalone HTML:', err);
@@ -434,6 +438,16 @@ export default function App() {
       setIsLoading(false);
       showToast(`Đã mở "${file.name}" (${numPages} trang)!`, 'success');
 
+      // Detect orientation if in auto mode
+      const firstRatio = initialPages[0]?.aspectRatio || 0.707;
+      if (bookOrientation === 'auto') {
+        if (firstRatio >= 1.05) {
+          showToast(`Đã nhận diện file PDF khổ ngang (Landscape)! Tự động tối ưu hiển thị dạng slide ngang.`, 'info');
+        } else {
+          showToast(`Đã nhận diện file PDF khổ đứng (Portrait)! Tự động tối ưu hiển thị dạng sách đứng.`, 'info');
+        }
+      }
+
       // Save locally to IndexedDB so direct URL link works
       saveBookToStorage(bookId, file.name.replace(/\.[^/.]+$/, ''), file, file.name, numPages);
 
@@ -482,6 +496,12 @@ export default function App() {
       try {
         const samplePages = generateSampleBookPages(bookId);
         const meta = SAMPLE_BOOKS.find((b) => b.id === bookId);
+
+        if (bookId === 'sample_slides') {
+          setBookOrientation('landscape');
+        } else {
+          setBookOrientation('portrait');
+        }
 
         pdfDocRef.current = null;
         totalDocPagesRef.current = samplePages.length;
@@ -783,6 +803,8 @@ export default function App() {
               onToggleSpeechPlayer={handleToggleSpeechPlayer}
               autoReadOnFlip={autoReadOnFlip}
               onToggleAutoReadOnFlip={handleToggleAutoReadOnFlip}
+              bookOrientation={bookOrientation}
+              onChangeBookOrientation={setBookOrientation}
               theme={theme}
               bookTitle={bookTitle}
             />
@@ -796,6 +818,8 @@ export default function App() {
                 onPageChange={(newIndex) => setCurrentPageIndex(newIndex)}
                 zoom={zoom}
                 bookRef={bookFlipRef}
+                bookOrientation={bookOrientation}
+                onChangeBookOrientation={setBookOrientation}
               />
             </div>
 
@@ -841,6 +865,8 @@ export default function App() {
               loadingProgress={loadingProgress}
               errorMessage={errorMessage}
               onClearError={() => setErrorMessage(null)}
+              bookOrientation={bookOrientation}
+              onChangeBookOrientation={setBookOrientation}
             />
           </div>
         )}

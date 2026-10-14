@@ -24,8 +24,11 @@ import {
   Share2,
   Globe,
   Headphones,
+  FileText,
+  Monitor,
 } from 'lucide-react';
 import { ThemeConfig } from '../utils/theme';
+import { BookOrientation } from './UploadArea';
 
 interface ReadingToolbarProps {
   currentPage: number; // 1-based
@@ -60,6 +63,8 @@ interface ReadingToolbarProps {
   onToggleSpeechPlayer?: () => void;
   autoReadOnFlip?: boolean;
   onToggleAutoReadOnFlip?: (enabled: boolean) => void;
+  bookOrientation?: BookOrientation;
+  onChangeBookOrientation?: (orientation: BookOrientation) => void;
   theme: ThemeConfig;
   bookTitle?: string;
 }
@@ -97,6 +102,8 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
   onToggleSpeechPlayer,
   autoReadOnFlip = false,
   onToggleAutoReadOnFlip,
+  bookOrientation = 'auto',
+  onChangeBookOrientation,
   theme,
   bookTitle,
 }) => {
@@ -481,6 +488,32 @@ export const ReadingToolbar: React.FC<ReadingToolbarProps> = ({
               {/* Status indicator badge */}
               {autoReadOnFlip && !isSpeechSpeaking && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Tự động đọc khi lật đang bật" />
+              )}
+            </button>
+          )}
+
+          {/* Book Orientation Selector Button (Khổ Đứng / Khổ Ngang) */}
+          {onChangeBookOrientation && (
+            <button
+              onClick={() => onChangeBookOrientation(bookOrientation === 'landscape' ? 'portrait' : 'landscape')}
+              className="px-2.5 py-1.5 rounded-lg border hover:bg-black/5 transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer shrink-0"
+              style={{ borderColor: theme.surfaceBorder }}
+              title={
+                bookOrientation === 'landscape'
+                  ? 'Đang ở Khổ ngang (Landscape) - Nhấp để chuyển sang Khổ đứng'
+                  : 'Đang ở Khổ đứng (Portrait) - Nhấp để chuyển sang Khổ ngang'
+              }
+            >
+              {bookOrientation === 'landscape' ? (
+                <>
+                  <Monitor className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="hidden xl:inline">Khổ ngang</span>
+                </>
+              ) : (
+                <>
+                  <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="hidden xl:inline">Khổ đứng</span>
+                </>
               )}
             </button>
           )}

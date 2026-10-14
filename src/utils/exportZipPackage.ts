@@ -18,7 +18,8 @@ export async function exportFlipbookZipPackage(
   title: string,
   originalPdfFile: File | null,
   themeColor: string = '#0D9488',
-  onProgress?: (progress: ZipExportProgress) => void
+  onProgress?: (progress: ZipExportProgress) => void,
+  bookOrientation: 'auto' | 'portrait' | 'landscape' = 'auto'
 ): Promise<void> {
   const zip = new JSZip();
   const safeTitle = (title || 'Ebook_Lat_Trang').trim();
@@ -147,6 +148,19 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
     "'": '&#39;',
   }[m] || m));
 
+  const firstRatio = pages[0]?.aspectRatio || 0.707;
+  const isLandscape =
+    bookOrientation === 'landscape'
+      ? true
+      : bookOrientation === 'portrait'
+      ? false
+      : firstRatio >= 1.05;
+
+  const singleRatio = isLandscape
+    ? (firstRatio >= 1.05 ? Number(firstRatio.toFixed(3)) : 1.414)
+    : (firstRatio < 1.05 ? Number(firstRatio.toFixed(3)) : 0.707);
+  const dualRatio = Number((singleRatio * 2).toFixed(3));
+
   const standaloneHtml = `<!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -253,11 +267,14 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
     .cb-br { bottom: 3px; right: 3px; border-bottom: 2px solid #FCD34D; border-right: 2px solid #FCD34D; }
     .book-pages {
       display: flex; background: #FFFFFF; border-radius: 4px;
-      overflow: hidden; height: min(74vh, 780px);
-      aspect-ratio: 2 / 1.414; position: relative;
+      overflow: hidden; height: ${isLandscape ? 'min(60vh, 680px)' : 'min(74vh, 780px)'};
+      aspect-ratio: ${dualRatio}; position: relative;
       box-shadow: inset 0 0 10px rgba(0,0,0,0.06);
     }
-    .single-mode .book-pages { aspect-ratio: 1 / 1.414; }
+    .single-mode .book-pages {
+      height: ${isLandscape ? 'min(74vh, 780px)' : 'min(74vh, 780px)'};
+      aspect-ratio: ${singleRatio};
+    }
     .page-box {
       width: 50%; height: 100%; background: #FFF;
       position: relative; display: flex; align-items: center; justify-content: center;
@@ -362,6 +379,7 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
       <button class="btn" id="btnSound">🔊 Âm lật: Bật</button>
       <button class="btn" id="btnSpeech" title="Đọc giọng nói nội dung trang sách">🎧 Đọc trang</button>
       <button class="btn" id="btnAutoSpeech" title="Tự động phát giọng đọc khi lật trang">⚡ Đọc khi lật: Tắt</button>
+      <button class="btn" id="btnOrient" title="Chuyển đổi khổ đứng / khổ ngang">${isLandscape ? '🖥️ Khổ ngang' : '📄 Khổ đứng'}</button>
       <button class="btn" id="btnMode">📖 2 Trang</button>
       <button class="btn" id="btnZoomOut" title="Thu nhỏ">🔍-</button>
       <button class="btn" id="btnZoomReset" title="Đặt lại 100%">100%</button>
@@ -754,11 +772,41 @@ HƯỚNG DẪN MỞ VÀ ĐỌC SÁCH NGOẠI TUYẾN (100% KHÔNG CẦN INTERNET
       });
     }
 
+    // Orientation toggle
+    const btnOrient = document.getElementById('btnOrient');
+    let currentIsLandscape = ${isLandscape};
+    if (btnOrient) {
+      btnOrient.addEventListener('click', function() {
+        currentIsLandscape = !currentIsLandscape;
+        this.innerText = currentIsLandscape ? '🖥️ Khổ ngang' : '📄 Khổ đứng';
+        const pagesEl = document.getElementById('bookPages');
+        if (pagesEl) {
+          if (currentIsLandscape) {
+            pagesEl.style.aspectRatio = viewMode === 'single' ? '${singleRatio}' : '${dualRatio}';
+            pagesEl.style.height = viewMode === 'single' ? 'min(74vh, 780px)' : 'min(60vh, 680px)';
+          } else {
+            pagesEl.style.aspectRatio = viewMode === 'single' ? '1 / 1.414' : '2 / 1.414';
+            pagesEl.style.height = 'min(74vh, 780px)';
+          }
+        }
+      });
+    }
+
     // Dual / Single view mode toggle
     btnMode.innerText = viewMode === 'dual' ? '📖 2 Trang' : '📱 1 Trang';
     btnMode.addEventListener('click', function() {
       viewMode = viewMode === 'dual' ? 'single' : 'dual';
       this.innerText = viewMode === 'dual' ? '📖 2 Trang' : '📱 1 Trang';
+      const pagesEl = document.getElementById('bookPages');
+      if (pagesEl) {
+        if (currentIsLandscape) {
+          pagesEl.style.aspectRatio = viewMode === 'single' ? '${singleRatio}' : '${dualRatio}';
+          pagesEl.style.height = viewMode === 'single' ? 'min(74vh, 780px)' : 'min(60vh, 680px)';
+        } else {
+          pagesEl.style.aspectRatio = viewMode === 'single' ? '1 / 1.414' : '2 / 1.414';
+          pagesEl.style.height = 'min(74vh, 780px)';
+        }
+      }
       renderSpread();
     });
 

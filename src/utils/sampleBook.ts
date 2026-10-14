@@ -24,9 +24,19 @@ export const SAMPLE_BOOKS: SampleBookMeta[] = [
     subtitle: 'Khám phá thế giới tự nhiên và bảo vệ môi trường sống',
     author: 'Nhà xuất bản Giáo Dục & Môi Trường',
     totalPages: 8,
-    description: 'Sách giáo khoa mẫu 8 trang với hình ảnh minh họa sinh động, câu hỏi tư duy và bài học đạo đức.',
-    tag: 'Sách giáo dục mẫu',
+    description: 'Sách giáo khoa mẫu 8 trang khổ đứng (Portrait) với hình ảnh minh họa sinh động, bài học đạo đức.',
+    tag: 'Khổ đứng (Portrait)',
     coverAccent: '#166534',
+  },
+  {
+    id: 'sample_slides',
+    title: 'Bài Giảng Điện Tử: Hệ Sinh Thái & Đa Dạng Sinh Học',
+    subtitle: 'Giáo án điện tử slide trình chiếu khổ ngang trực quan',
+    author: 'Tổ Chuyên Môn Sinh Học Thực Nghiệm',
+    totalPages: 6,
+    description: 'Tài liệu giáo án mẫu khổ ngang (Landscape - tỉ lệ 16:10) chuyên dùng cho máy chiếu, màn hình tivi và trình chiếu lớp học.',
+    tag: 'Khổ ngang (Landscape)',
+    coverAccent: '#D97706',
   },
   {
     id: 'sample_pedagogy',
@@ -34,8 +44,8 @@ export const SAMPLE_BOOKS: SampleBookMeta[] = [
     subtitle: 'Cẩm nang phương pháp phát triển văn hóa đọc học đường',
     author: 'Viện Nghiên Cứu Giáo Dục Đổi Mới',
     totalPages: 6,
-    description: 'Tài liệu hướng dẫn 6 trang dành cho giáo viên và phụ huynh rèn luyện kỹ năng đọc hiểu sâu.',
-    tag: 'Tài liệu sư phạm',
+    description: 'Tài liệu hướng dẫn 6 trang khổ đứng dành cho giáo viên và phụ huynh rèn luyện kỹ năng đọc hiểu sâu.',
+    tag: 'Khổ đứng (Portrait)',
     coverAccent: '#1E3A8A',
   },
 ];
@@ -51,6 +61,14 @@ export const SAMPLE_BOOK_TEXTS: Record<string, string[]> = {
     'Chương 3: Hành Động Xanh Vì Một Ngày Mai Tươi Đẹp. Mỗi hành động nhỏ hôm nay đều góp phần gieo mầm cho tương lai: Tiết kiệm điện nước, trồng thêm cây xanh quanh trường lớp, sử dụng vật liệu tái chế và lan tỏa lối sống xanh đến bạn bè và gia đình.',
     'Lời Kết: Trái Đất Trong Tay Chúng Ta. Cảm ơn bạn đã đồng hành cùng cuốn sách. Hãy cùng nhau bảo vệ hành tinh xanh của chúng ta ngày càng tươi đẹp và tràn đầy sức sống. Chúc bạn có những trải nghiệm đọc sách tuyệt vời!'
   ],
+  sample_slides: [
+    'Bài Giảng Điện Tử: Hệ Sinh Thái & Đa Dạng Sinh Học. Tổ chuyên môn Sinh học thực nghiệm. Chuyên đề học tập trực quan trên nền tảng số hóa.',
+    'Mục Tiêu Bài Học Và Cấu Trúc Chuyên Đề. Thứ nhất: Nhận biết các thành phần cơ bản của hệ sinh thái. Thứ hai: Hiểu rõ chuỗi thức ăn và dòng năng lượng. Thứ ba: Đề xuất các giải pháp thực tiễn bảo tồn thiên nhiên.',
+    'Cấu Trúc Tầng Tán Rừng Nhiệt Đới. Tầng vượt tán đón trọn ánh sáng mặt trời. Tầng tán chính tạo mái che dày đặc. Tầng dưới tán và tầng mặt đất phân giải chất hữu cơ duy trì chu trình tuần hoàn dinh dưỡng.',
+    'Chuỗi Thức Ăn Và Lưới Dinh Dưỡng Trong Tự Nhiên. Sinh vật sản xuất là cỏ cây và thực vật xanh quang hợp. Sinh vật tiêu thụ bậc một gồm động vật ăn cỏ. Sinh vật tiêu thụ bậc hai là động vật ăn thịt, và vi sinh vật phân giải khép kín chu trình.',
+    'Thực Trạng Đa Dạng Sinh Học Và Nguy Cơ Suy Giảm. Mất sinh cảnh do ô nhiễm và khai thác quá mức. Trách nhiệm của học sinh và cộng đồng: Lan tỏa thông điệp xanh và tham gia trồng rừng phủ xanh đất trống.',
+    'Tổng Kết Bài Học & Câu Hỏi Tư Duy. Hãy vẽ sơ đồ tư duy tóm tắt lưới thức ăn tại địa phương em. Cảm ơn các em học sinh đã chú ý lắng nghe bài giảng!'
+  ],
   sample_pedagogy: [
     'Sổ Tay Sư Phạm: Đọc Sách Tích Cực. Cẩm nang phương pháp phát triển văn hóa đọc học đường. Viện Nghiên Cứu Giáo Dục Đổi Mới.',
     'Mục Tiêu Và Tầm Nhìn Giáo Dục. Đọc sách không chỉ là tiếp thu kiến thức mà là hành trình rèn luyện tư duy phản biện, nuôi dưỡng tâm hồn và đánh thức lòng trắc ẩn trong mỗi đứa trẻ.',
@@ -65,14 +83,17 @@ export const SAMPLE_BOOK_TEXTS: Record<string, string[]> = {
  * Generates rendered page images for a sample book dynamically using HTML5 Canvas
  */
 export function generateSampleBookPages(bookId: string): RenderedPage[] {
-  const width = 800;
-  const height = 1130; // standard A4 aspect ratio (1 : 1.414)
   let pages: RenderedPage[] = [];
 
-  if (bookId === 'sample_pedagogy') {
-    pages = generatePedagogyPages(width, height);
+  if (bookId === 'sample_slides') {
+    // Landscape presentation slide format: 1200 x 750 (aspectRatio = 1.6)
+    pages = generateSlidesPages(1200, 750);
+  } else if (bookId === 'sample_pedagogy') {
+    // Portrait standard A4 format: 800 x 1130 (aspectRatio = 0.707)
+    pages = generatePedagogyPages(800, 1130);
   } else {
-    pages = generateNaturePages(width, height);
+    // Portrait standard A4 format: 800 x 1130 (aspectRatio = 0.707)
+    pages = generateNaturePages(800, 1130);
   }
 
   const textList = SAMPLE_BOOK_TEXTS[bookId] || SAMPLE_BOOK_TEXTS.sample_nature || [];
@@ -873,4 +894,395 @@ function drawCard(ctx: CanvasRenderingContext2D, x: number, y: number, w: number
   ctx.font = '13px "Plus Jakarta Sans", sans-serif';
   ctx.fillText(sub, x + w / 2, y + 170);
   ctx.textAlign = 'left';
+}
+
+/**
+ * Generates 6 landscape presentation slides (width: 1200, height: 750, ratio 1.6)
+ */
+function generateSlidesPages(width: number, height: number): RenderedPage[] {
+  const pages: RenderedPage[] = [];
+
+  // Slide 1: Cover Title Slide
+  {
+    const { canvas, ctx } = createBaseCanvas(width, height);
+    const grad = ctx.createLinearGradient(0, 0, width, height);
+    grad.addColorStop(0, '#1E293B');
+    grad.addColorStop(0.6, '#0F172A');
+    grad.addColorStop(1, '#020617');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Decorative grid pattern & accents
+    ctx.strokeStyle = 'rgba(217, 119, 6, 0.2)';
+    ctx.lineWidth = 1;
+    for (let x = 60; x < width; x += 60) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+    for (let y = 60; y < height; y += 60) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+
+    // Badge
+    ctx.fillStyle = '#D97706';
+    ctx.beginPath();
+    ctx.roundRect(100, 140, 260, 36, 18);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('GIÁO ÁN ĐIỆN TỬ • KHỔ NGANG', 230, 163);
+
+    // Main Title
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = 'bold 44px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('HỆ SINH THÁI RỪNG', 100, 260);
+    ctx.fillText('& ĐA DẠNG SINH HỌC', 100, 320);
+
+    // Subtitle
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '20px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('Chuyên đề bài giảng trực quan số hóa dành cho giáo viên và học sinh', 100, 380);
+
+    // Presenter card
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+    ctx.beginPath();
+    ctx.roundRect(100, 480, 500, 110, 14);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(217, 119, 6, 0.4)';
+    ctx.stroke();
+
+    ctx.fillStyle = '#FBBF24';
+    ctx.font = 'bold 15px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('TỔ CHUYÊN MÔN SINH HỌC & CÔNG NGHỆ', 130, 522);
+    ctx.fillStyle = '#E2E8F0';
+    ctx.font = '14px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('Định dạng: Khổ ngang (Landscape - 16:10 / Máy chiếu)', 130, 555);
+
+    // Page indicator
+    ctx.fillStyle = '#64748B';
+    ctx.font = '12px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Slide 1 / 6', width - 80, height - 50);
+
+    pages.push({
+      pageNumber: 1,
+      dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+      width,
+      height,
+      aspectRatio: width / height,
+    });
+  }
+
+  // Slide 2: Objectives & Agenda
+  {
+    const { canvas, ctx } = createBaseCanvas(width, height);
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(0, 0, width, height);
+
+    // Top banner
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(0, 0, width, 110);
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = 'bold 28px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Mục Tiêu Bài Học & Cấu Trúc Chuyên Đề', 80, 68);
+
+    // 3 Cards layout
+    const cardW = 320;
+    const cardH = 460;
+    const cards = [
+      { num: '01', title: 'Khái Niệm Hệ Sinh Thái', desc: 'Nhận biết các nhân tố sinh thái vô sinh và hữu sinh, vai trò của thảm thực vật.', color: '#0284C7' },
+      { num: '02', title: 'Chuỗi & Lưới Thức Ăn', desc: 'Phân tích dòng năng lượng từ sinh vật sản xuất tới sinh vật tiêu thụ và phân giải.', color: '#059669' },
+      { num: '03', title: 'Hành Động Bảo Tồn', desc: 'Đề xuất giải pháp bảo vệ rừng, chống suy giảm đa dạng sinh học trong bối cảnh mới.', color: '#D97706' },
+    ];
+
+    cards.forEach((c, i) => {
+      const cx = 80 + i * (cardW + 40);
+      const cy = 160;
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.roundRect(cx, cy, cardW, cardH, 16);
+      ctx.fill();
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = c.color;
+      ctx.beginPath();
+      ctx.roundRect(cx + 24, cy + 24, 52, 52, 12);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 22px "Plus Jakarta Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(c.num, cx + 50, cy + 58);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#0F172A';
+      ctx.font = 'bold 19px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(c.title, cx + 24, cy + 125);
+
+      ctx.fillStyle = '#475569';
+      ctx.font = '15px "Plus Jakarta Sans", sans-serif';
+      // wrapped text
+      const words = c.desc.split(' ');
+      let line = '';
+      let lineY = cy + 170;
+      for (const w of words) {
+        const testLine = line + w + ' ';
+        if (ctx.measureText(testLine).width > cardW - 48) {
+          ctx.fillText(line, cx + 24, lineY);
+          line = w + ' ';
+          lineY += 26;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, cx + 24, lineY);
+    });
+
+    // Footer
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '13px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Slide 2 / 6', width - 80, height - 40);
+
+    pages.push({
+      pageNumber: 2,
+      dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+      width,
+      height,
+      aspectRatio: width / height,
+    });
+  }
+
+  // Slide 3: Canopy Layers
+  {
+    const { canvas, ctx } = createBaseCanvas(width, height);
+    ctx.fillStyle = '#F0FDF4';
+    ctx.fillRect(0, 0, width, height);
+
+    // Header
+    ctx.fillStyle = '#166534';
+    ctx.font = 'bold 28px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Cấu Trúc Tầng Tán Của Rừng Mưa Nhiệt Đới', 80, 80);
+
+    // Horizontal Layer bands
+    const layers = [
+      { name: '1. Tầng vượt tán (Trên 40m)', desc: 'Cây đại thụ vươn mình đón ánh sáng chói chang, chim ưng, vượn và đại bàng sinh sống.', bg: '#DCFCE7', tag: '#166534' },
+      { name: '2. Tầng tán chính (25m - 40m)', desc: 'Mái vòm rậm rạp xanh mát, chiếm 70% sinh khối và sự sống của toàn bộ khu rừng.', bg: '#BBF7D0', tag: '#15803D' },
+      { name: '3. Tầng dưới tán (5m - 25m)', desc: 'Không khí ẩm ướt, ánh sáng lọc mờ ảo, nơi phát triển của hoa phong lan và cây leo.', bg: '#86EFAC', tag: '#166534' },
+      { name: '4. Tầng thảm tươi & Đất (0m - 5m)', desc: 'Rêu mốc, nấm, dương xỉ và côn trùng thực hiện phân giải chất hữu cơ màu mỡ.', bg: '#4ADE80', tag: '#14532D' },
+    ];
+
+    layers.forEach((l, idx) => {
+      const ly = 120 + idx * 125;
+      ctx.fillStyle = l.bg;
+      ctx.beginPath();
+      ctx.roundRect(80, ly, width - 160, 105, 14);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(22, 101, 52, 0.2)';
+      ctx.stroke();
+
+      ctx.fillStyle = l.tag;
+      ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(l.name, 110, ly + 40);
+
+      ctx.fillStyle = '#1F2937';
+      ctx.font = '15px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(l.desc, 110, ly + 75);
+    });
+
+    ctx.fillStyle = '#166534';
+    ctx.font = '13px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Slide 3 / 6', width - 80, height - 30);
+
+    pages.push({
+      pageNumber: 3,
+      dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+      width,
+      height,
+      aspectRatio: width / height,
+    });
+  }
+
+  // Slide 4: Food Chain Diagram
+  {
+    const { canvas, ctx } = createBaseCanvas(width, height);
+    ctx.fillStyle = '#FFFBEB';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = '#92400E';
+    ctx.font = 'bold 28px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Sơ Đồ Chuỗi Thức Ăn Và Dòng Năng Lượng', 80, 80);
+
+    // 4 step flowchart boxes horizontally
+    const steps = [
+      { label: 'Năng lượng Mặt Trời', sub: 'Quang hợp', color: '#F59E0B' },
+      { label: 'Sinh vật sản xuất', sub: 'Cỏ & Thực vật xanh', color: '#10B981' },
+      { label: 'Sinh vật tiêu thụ', sub: 'Động vật ăn cỏ & Ăn thịt', color: '#EF4444' },
+      { label: 'Sinh vật phân giải', sub: 'Nấm & Vi sinh vật', color: '#8B5CF6' },
+    ];
+
+    const boxW = 220;
+    const boxH = 260;
+    steps.forEach((s, i) => {
+      const bx = 80 + i * (boxW + 35);
+      const by = 220;
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.roundRect(bx, by, boxW, boxH, 16);
+      ctx.fill();
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = s.color;
+      ctx.fillRect(bx, by, boxW, 14);
+
+      ctx.fillStyle = '#1F2937';
+      ctx.font = 'bold 17px "Plus Jakarta Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.label, bx + boxW / 2, by + 90);
+
+      ctx.fillStyle = '#6B7280';
+      ctx.font = '14px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(s.sub, bx + boxW / 2, by + 140);
+
+      // Arrow to next box
+      if (i < steps.length - 1) {
+        ctx.fillStyle = '#D97706';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('➔', bx + boxW + 18, by + boxH / 2);
+      }
+    });
+
+    ctx.fillStyle = '#78350F';
+    ctx.font = '13px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Slide 4 / 6', width - 80, height - 40);
+
+    pages.push({
+      pageNumber: 4,
+      dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+      width,
+      height,
+      aspectRatio: width / height,
+    });
+  }
+
+  // Slide 5: Conservation Actions
+  {
+    const { canvas, ctx } = createBaseCanvas(width, height);
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = '#0F172A';
+    ctx.font = 'bold 28px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Các Giải Pháp Bảo Vệ & Phục Hồi Đa Dạng Sinh Học', 80, 80);
+
+    // 2 Large Split panels
+    const panelW = 490;
+    const panelH = 480;
+
+    // Left Panel: Threat
+    ctx.fillStyle = '#FEF2F2';
+    ctx.beginPath();
+    ctx.roundRect(80, 130, panelW, panelH, 16);
+    ctx.fill();
+    ctx.strokeStyle = '#FECACA';
+    ctx.stroke();
+
+    ctx.fillStyle = '#991B1B';
+    ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('Nguy cơ đe dọa hiện hữu', 110, 180);
+    ctx.fillStyle = '#374151';
+    ctx.font = '15px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('• Chặt phá rừng và thu hẹp sinh cảnh sống tự nhiên', 110, 230);
+    ctx.fillText('• Biến đổi khí hậu làm tăng nhiệt độ và khô hạn', 110, 275);
+    ctx.fillText('• Ô nhiễm rác thải nhựa và hóa chất bảo vệ thực vật', 110, 320);
+    ctx.fillText('• Săn bắt và buôn bán trái phép động vật hoang dã', 110, 365);
+
+    // Right Panel: Solution
+    ctx.fillStyle = '#F0FDF4';
+    ctx.beginPath();
+    ctx.roundRect(630, 130, panelW, panelH, 16);
+    ctx.fill();
+    ctx.strokeStyle = '#BBF7D0';
+    ctx.stroke();
+
+    ctx.fillStyle = '#166534';
+    ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('Hành động cụ thể của chúng ta', 660, 180);
+    ctx.fillStyle = '#374151';
+    ctx.font = '15px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('✔ Trồng cây gây rừng tại địa phương và khuôn viên trường', 660, 230);
+    ctx.fillText('✔ Phân loại rác tại nguồn, tái chế và tiết kiệm năng lượng', 660, 275);
+    ctx.fillText('✔ Tham gia các hoạt động tuyên truyền bảo tồn thiên nhiên', 660, 320);
+    ctx.fillText('✔ Ứng dụng công nghệ số trong học tập và nâng cao ý thức', 660, 365);
+
+    ctx.fillStyle = '#64748B';
+    ctx.font = '13px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Slide 5 / 6', width - 80, height - 40);
+
+    pages.push({
+      pageNumber: 5,
+      dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+      width,
+      height,
+      aspectRatio: width / height,
+    });
+  }
+
+  // Slide 6: Summary & Review
+  {
+    const { canvas, ctx } = createBaseCanvas(width, height);
+    const grad = ctx.createLinearGradient(0, 0, width, height);
+    grad.addColorStop(0, '#0F172A');
+    grad.addColorStop(1, '#1E293B');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = '#FBBF24';
+    ctx.font = 'bold 36px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('TỔNG KẾT BÀI HỌC & CỦNG CỐ', width / 2, 220);
+
+    ctx.fillStyle = '#E2E8F0';
+    ctx.font = '18px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('Mỗi cá nhân là một đại sứ bảo vệ hành tinh xanh!', width / 2, 290);
+    ctx.fillText('Hãy hoàn thành sơ đồ tư duy tóm tắt nội dung bài học vào vở ghi chép.', width / 2, 330);
+
+    ctx.fillStyle = '#38BDF8';
+    ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('CẢM ƠN THẦY CÔ VÀ CÁC BẠN HỌC SINH ĐÃ THEO DÕI!', width / 2, 450);
+
+    ctx.fillStyle = '#64748B';
+    ctx.font = '13px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Slide 6 / 6', width - 80, height - 50);
+
+    pages.push({
+      pageNumber: 6,
+      dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+      width,
+      height,
+      aspectRatio: width / height,
+    });
+  }
+
+  return pages;
 }
